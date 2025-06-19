@@ -2,6 +2,8 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
+const User = require('./models/User');
 
 const apiRoutes = require('./apiRoutes');
 
@@ -23,12 +25,38 @@ mongoose.connect(MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true
 })
-.then(() => {
+.then(async () => {
   console.log('MongoDB connected successfully');
+  await seedAdminUser();
 })
 .catch((err) => {
   console.error('MongoDB connection error:', err);
 });
+
+// Function to seed admin user
+const seedAdminUser = async () => {
+  try {
+    const adminEmail = 'ilez2017@mail.ru';
+    const adminPassword = '123123123';
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      const adminUser = new User({
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User',
+        role: 'admin'
+      });
+      await adminUser.save();
+      console.log('Admin user created successfully');
+    } else {
+      console.log('Admin user already exists');
+    }
+  } catch (error) {
+    console.error('Error seeding admin user:', error.message);
+  }
+};
 
 // Error handling middleware
 app.use((err, req, res, next) => {

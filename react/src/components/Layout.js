@@ -53,7 +53,8 @@ function Layout() {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#000000' // Changed header color to black
+          backgroundColor: '#1976d2', // Changed header color to blue to match the primary theme color
+          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)' // Adding subtle shadow for depth
         }}
       >
         <Toolbar>
@@ -66,7 +67,7 @@ function Layout() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div">
+          <Typography variant="h6" noWrap component="div" sx={{ color: '#ffffff' }}>
             Prof-IT - Управление школой
           </Typography>
         </Toolbar>

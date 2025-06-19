@@ -40,6 +40,9 @@ const Login = () => {
           <Typography component="h1" variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>
             Sign In
           </Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary', textAlign: 'center' }}>
+            Sign in as Administrator, Teacher, or Student
+          </Typography>
         </Box>
         {error && (
           <Alert severity="error" sx={{ mb: 3 }}>

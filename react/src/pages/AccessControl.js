@@ -5,84 +5,84 @@ import axios from 'axios';
 
 const API_URL = '/';
 
-const AccessControl = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [role, setRole] = useState('');
-  const [permissions, setPermissions] = useState([]);
-  const [referenceId, setReferenceId] = useState('');
-  const [referenceModel, setReferenceModel] = useState('');
-  const [updateLoading, setUpdateLoading] = useState(false);
-  const [updateError, setUpdateError] = useState(null);
-  const [updateSuccess, setUpdateSuccess] = useState(false);
+const УправлениеДоступом = () => {
+  const [пользователи, установитьПользователей] = useState([]);
+  const [загрузка, установитьЗагрузку] = useState(true);
+  const [ошибка, установитьОшибку] = useState(null);
+  const [выбранныйПользователь, установитьВыбранногоПользователя] = useState(null);
+  const [роль, установитьРоль] = useState('');
+  const [праваДоступа, установитьПраваДоступа] = useState([]);
+  const [ссылочныйИдентификатор, установитьСсылочныйИдентификатор] = useState('');
+  const [ссылочнаяМодель, установитьСсылочнуюМодель] = useState('');
+  const [загрузкаОбновления, установитьЗагрузкуОбновления] = useState(false);
+  const [ошибкаОбновления, установитьОшибкуОбновления] = useState(null);
+  const [успехОбновления, установитьУспехОбновления] = useState(false);
 
   useEffect(() => {
-    fetchUsers();
+    получитьПользователей();
   }, []);
 
-  const fetchUsers = async () => {
+  const получитьПользователей = async () => {
     try {
-      setLoading(true);
-      setError(null);
-      const response = await axios.get(`${API_URL}api/access/users`);
-      setUsers(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to load users. Please try again later.');
-      setLoading(false);
-      console.error(err);
+      установитьЗагрузку(true);
+      установитьОшибку(null);
+      const ответ = await axios.get(`${API_URL}api/access/users`);
+      установитьПользователей(ответ.data);
+      установитьЗагрузку(false);
+    } catch (ошибка) {
+      установитьОшибку('Не удалось загрузить пользователей. Попробуйте позже.');
+      установитьЗагрузку(false);
+      console.error(ошибка);
     }
   };
 
-  const handleUserSelect = (user) => {
-    setSelectedUser(user);
-    setRole(user.role);
-    setPermissions(user.permissions);
-    setReferenceId(user.referenceId || '');
-    setReferenceModel(user.referenceModel || '');
-    setUpdateSuccess(false);
-    setUpdateError(null);
+  const обработатьВыборПользователя = (пользователь) => {
+    установитьВыбранногоПользователя(пользователь);
+    установитьРоль(пользователь.role);
+    установитьПраваДоступа(пользователь.permissions);
+    установитьСсылочныйИдентификатор(пользователь.referenceId || '');
+    установитьСсылочнуюМодель(пользователь.referenceModel || '');
+    установитьУспехОбновления(false);
+    установитьОшибкуОбновления(null);
   };
 
-  const handleRoleChange = (event) => {
-    setRole(event.target.value);
+  const обработатьИзменениеРоли = (событие) => {
+    установитьРоль(событие.target.value);
   };
 
-  const handleReferenceModelChange = (event) => {
-    setReferenceModel(event.target.value);
+  const обработатьИзменениеСсылочнойМодели = (событие) => {
+    установитьСсылочнуюМодель(событие.target.value);
   };
 
-  const handleUpdate = async () => {
-    if (!selectedUser) return;
+  const обработатьОбновление = async () => {
+    if (!выбранныйПользователь) return;
 
     try {
-      setUpdateLoading(true);
-      setUpdateError(null);
-      setUpdateSuccess(false);
+      установитьЗагрузкуОбновления(true);
+      установитьОшибкуОбновления(null);
+      установитьУспехОбновления(false);
 
-      // Update role
-      await axios.put(`${API_URL}api/access/users/${selectedUser._id}/role`, { role });
+      // Обновление роли
+      await axios.put(`${API_URL}api/access/users/${выбранныйПользователь._id}/role`, { role: роль });
 
-      // Update permissions
-      await axios.put(`${API_URL}api/access/users/${selectedUser._id}/permissions`, { permissions });
+      // Обновление прав доступа
+      await axios.put(`${API_URL}api/access/users/${выбранныйПользователь._id}/permissions`, { permissions: праваДоступа });
 
-      // Update reference
-      if (referenceId && referenceModel) {
-        await axios.put(`${API_URL}api/access/users/${selectedUser._id}/reference`, { referenceId, referenceModel });
+      // Обновление ссылки
+      if (ссылочныйИдентификатор && ссылочнаяМодель) {
+        await axios.put(`${API_URL}api/access/users/${выбранныйПользователь._id}/reference`, { referenceId: ссылочныйИдентификатор, referenceModel: ссылочнаяМодель });
       }
 
-      setUpdateSuccess(true);
-      setUpdateLoading(false);
+      установитьУспехОбновления(true);
+      установитьЗагрузкуОбновления(false);
 
-      // Refresh user list
-      const response = await axios.get(`${API_URL}api/access/users`);
-      setUsers(response.data);
-    } catch (err) {
-      setUpdateError('Failed to update user data. Please try again.');
-      setUpdateLoading(false);
-      console.error(err);
+      // Обновление списка пользователей
+      const ответ = await axios.get(`${API_URL}api/access/users`);
+      установитьПользователей(ответ.data);
+    } catch (ошибка) {
+      установитьОшибкуОбновления('Не удалось обновить данные пользователя. Попробуйте снова.');
+      установитьЗагрузкуОбновления(false);
+      console.error(ошибка);
     }
   };
 
@@ -90,17 +90,17 @@ const AccessControl = () => {
     <Box>
       <Typography variant="h4" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <SecurityIcon fontSize="large" />
-        Access Control
+        Управление доступом
       </Typography>
 
       <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
-        {loading ? (
+        {загрузка ? (
           <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
             <CircularProgress />
           </Box>
-        ) : error ? (
+        ) : ошибка ? (
           <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
+            {ошибка}
           </Alert>
         ) : (
           <TableContainer>
@@ -108,22 +108,22 @@ const AccessControl = () => {
               <TableHead>
                 <TableRow>
                   <TableCell>Email</TableCell>
-                  <TableCell>First Name</TableCell>
-                  <TableCell>Last Name</TableCell>
-                  <TableCell>Role</TableCell>
-                  <TableCell>Actions</TableCell>
+                  <TableCell>Имя</TableCell>
+                  <TableCell>Фамилия</TableCell>
+                  <TableCell>Роль</TableCell>
+                  <TableCell>Действия</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {users.map((user) => (
-                  <TableRow key={user._id} hover onClick={() => handleUserSelect(user)} selected={selectedUser && selectedUser._id === user._id}>
-                    <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.firstName}</TableCell>
-                    <TableCell>{user.lastName}</TableCell>
-                    <TableCell>{user.role}</TableCell>
+                {пользователи.map((пользователь) => (
+                  <TableRow key={пользователь._id} hover onClick={() => обработатьВыборПользователя(пользователь)} selected={выбранныйПользователь && выбранныйПользователь._id === пользователь._id}>
+                    <TableCell>{пользователь.email}</TableCell>
+                    <TableCell>{пользователь.firstName}</TableCell>
+                    <TableCell>{пользователь.lastName}</TableCell>
+                    <TableCell>{пользователь.role}</TableCell>
                     <TableCell>
-                      <Button variant="outlined" size="small" onClick={() => handleUserSelect(user)}>
-                        Edit
+                      <Button variant="outlined" size="small" onClick={() => обработатьВыборПользователя(пользователь)}>
+                        Редактировать
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -134,48 +134,48 @@ const AccessControl = () => {
         )}
       </Paper>
 
-      {selectedUser && (
+      {выбранныйПользователь && (
         <Paper elevation={3} sx={{ p: 3, mt: 3 }}>
           <Typography variant="h6" gutterBottom>
-            Edit User: {selectedUser.email}
+            Редактировать пользователя: {выбранныйПользователь.email}
           </Typography>
 
           <Box sx={{ mt: 2 }}>
             <FormControl fullWidth margin="normal">
-              <InputLabel>Role</InputLabel>
-              <Select value={role} onChange={handleRoleChange} label="Role">
-                <MenuItem value="admin">Admin</MenuItem>
-                <MenuItem value="teacher">Teacher</MenuItem>
-                <MenuItem value="student">Student</MenuItem>
+              <InputLabel>Роль</InputLabel>
+              <Select value={роль} onChange={обработатьИзменениеРоли} label="Роль">
+                <MenuItem value="admin">Администратор</MenuItem>
+                <MenuItem value="teacher">Преподаватель</MenuItem>
+                <MenuItem value="student">Ученик</MenuItem>
               </Select>
             </FormControl>
 
             <TextField
               fullWidth
               margin="normal"
-              label="Reference ID"
-              value={referenceId}
-              onChange={(e) => setReferenceId(e.target.value)}
-              disabled={role === 'admin'}
+              label="Ссылочный ID"
+              value={ссылочныйИдентификатор}
+              onChange={(e) => установитьСсылочныйИдентификатор(e.target.value)}
+              disabled={роль === 'admin'}
             />
 
-            <FormControl fullWidth margin="normal" disabled={role === 'admin'}>
-              <InputLabel>Reference Model</InputLabel>
-              <Select value={referenceModel} onChange={handleReferenceModelChange} label="Reference Model">
-                <MenuItem value="Teacher">Teacher</MenuItem>
-                <MenuItem value="Student">Student</MenuItem>
+            <FormControl fullWidth margin="normal" disabled={роль === 'admin'}>
+              <InputLabel>Ссылочная модель</InputLabel>
+              <Select value={ссылочнаяМодель} onChange={обработатьИзменениеСсылочнойМодели} label="Ссылочная модель">
+                <MenuItem value="Teacher">Преподаватель</MenuItem>
+                <MenuItem value="Student">Ученик</MenuItem>
               </Select>
             </FormControl>
 
-            {updateError && (
+            {ошибкаОбновления && (
               <Alert severity="error" sx={{ mt: 2 }}>
-                {updateError}
+                {ошибкаОбновления}
               </Alert>
             )}
 
-            {updateSuccess && (
+            {успехОбновления && (
               <Alert severity="success" sx={{ mt: 2 }}>
-                User data updated successfully!
+                Данные пользователя успешно обновлены!
               </Alert>
             )}
 
@@ -183,17 +183,17 @@ const AccessControl = () => {
               <Button
                 variant="contained"
                 color="primary"
-                onClick={handleUpdate}
-                disabled={updateLoading}
+                onClick={обработатьОбновление}
+                disabled={загрузкаОбновления}
               >
-                {updateLoading ? <CircularProgress size={24} /> : 'Update'}
+                {загрузкаОбновления ? <CircularProgress size={24} /> : 'Обновить'}
               </Button>
               <Button
                 variant="outlined"
-                onClick={() => setSelectedUser(null)}
-                disabled={updateLoading}
+                onClick={() => установитьВыбранногоПользователя(null)}
+                disabled={загрузкаОбновления}
               >
-                Cancel
+                Отмена
               </Button>
             </Box>
           </Box>
@@ -203,4 +203,4 @@ const AccessControl = () => {
   );
 };
 
-export default AccessControl;
+export default УправлениеДоступом;

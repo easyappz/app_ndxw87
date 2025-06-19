@@ -4,40 +4,40 @@ import { Typography, Box, TextField, Button, Container, Paper, MenuItem, Select,
 import { Save as SaveIcon } from '@mui/icons-material';
 import api from '../services/api';
 
-function AddGroup() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+function ДобавитьГруппу() {
+  const навигатор = useNavigate();
+  const [данныеФормы, установитьДанныеФормы] = useState({
     name: '',
     subject: '',
     teacher: ''
   });
-  const [teachers, setTeachers] = useState([]);
+  const [преподаватели, установитьПреподавателей] = useState([]);
 
   useEffect(() => {
-    fetchTeachers();
+    получитьПреподавателей();
   }, []);
 
-  const fetchTeachers = async () => {
+  const получитьПреподавателей = async () => {
     try {
-      const data = await api.getTeachers();
-      setTeachers(data);
-    } catch (error) {
-      console.error('Ошибка при загрузке преподавателей:', error);
+      const данные = await api.getTeachers();
+      установитьПреподавателей(данные);
+    } catch (ошибка) {
+      console.error('Ошибка при загрузке преподавателей:', ошибка);
     }
   };
 
-  const handleChange = (e) => {
+  const обработатьИзменение = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    установитьДанныеФормы({ ...данныеФормы, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const обработатьОтправку = async (e) => {
     e.preventDefault();
     try {
-      await api.createGroup(formData);
-      navigate('/groups');
-    } catch (error) {
-      console.error('Ошибка при добавлении группы:', error);
+      await api.createGroup(данныеФормы);
+      навигатор('/groups');
+    } catch (ошибка) {
+      console.error('Ошибка при добавлении группы:', ошибка);
     }
   };
 
@@ -48,15 +48,15 @@ function AddGroup() {
       </Typography>
       <Container component="main" maxWidth="sm" sx={{ mt: 3 }}>
         <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={обработатьОтправку}>
             <TextField
               margin="normal"
               required
               fullWidth
               label="Название группы"
               name="name"
-              value={formData.name}
-              onChange={handleChange}
+              value={данныеФормы.name}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -64,20 +64,20 @@ function AddGroup() {
               fullWidth
               label="Предмет"
               name="subject"
-              value={formData.subject}
-              onChange={handleChange}
+              value={данныеФормы.subject}
+              onChange={обработатьИзменение}
             />
             <FormControl fullWidth margin="normal" required>
               <InputLabel>Преподаватель</InputLabel>
               <Select
                 name="teacher"
-                value={formData.teacher}
-                onChange={handleChange}
+                value={данныеФормы.teacher}
+                onChange={обработатьИзменение}
                 label="Преподаватель"
               >
-                {teachers.map(teacher => (
-                  <MenuItem key={teacher._id} value={teacher._id}>
-                    {teacher.firstName} {teacher.lastName} - {teacher.subjects.join(', ')}
+                {преподаватели.map(преподаватель => (
+                  <MenuItem key={преподаватель._id} value={преподаватель._id}>
+                    {преподаватель.firstName} {преподаватель.lastName} - {преподаватель.subjects.join(', ')}
                   </MenuItem>
                 ))}
               </Select>
@@ -85,7 +85,7 @@ function AddGroup() {
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/groups')}
+                onClick={() => навигатор('/groups')}
                 sx={{ mr: 2 }}
               >
                 Отмена
@@ -105,4 +105,4 @@ function AddGroup() {
   );
 }
 
-export default AddGroup;
+export default ДобавитьГруппу;

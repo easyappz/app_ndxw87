@@ -4,27 +4,27 @@ import { Typography, Box, TextField, Button, Container, Paper } from '@mui/mater
 import { Save as SaveIcon } from '@mui/icons-material';
 import api from '../services/api';
 
-function AddClassroom() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+function ДобавитьКабинет() {
+  const навигатор = useNavigate();
+  const [данныеФормы, установитьДанныеФормы] = useState({
     name: '',
     capacity: '',
     location: '',
     description: ''
   });
 
-  const handleChange = (e) => {
+  const обработатьИзменение = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    установитьДанныеФормы({ ...данныеФормы, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const обработатьОтправку = async (e) => {
     e.preventDefault();
     try {
-      await api.createClassroom(formData);
-      navigate('/classrooms');
-    } catch (error) {
-      console.error('Ошибка при добавлении кабинета:', error);
+      await api.createClassroom(данныеФормы);
+      навигатор('/classrooms');
+    } catch (ошибка) {
+      console.error('Ошибка при добавлении кабинета:', ошибка);
     }
   };
 
@@ -35,15 +35,15 @@ function AddClassroom() {
       </Typography>
       <Container component="main" maxWidth="sm" sx={{ mt: 3 }}>
         <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={обработатьОтправку}>
             <TextField
               margin="normal"
               required
               fullWidth
               label="Название кабинета"
               name="name"
-              value={formData.name}
-              onChange={handleChange}
+              value={данныеФормы.name}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -52,16 +52,16 @@ function AddClassroom() {
               label="Вместимость"
               name="capacity"
               type="number"
-              value={formData.capacity}
-              onChange={handleChange}
+              value={данныеФормы.capacity}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
               fullWidth
               label="Расположение"
               name="location"
-              value={formData.location}
-              onChange={handleChange}
+              value={данныеФормы.location}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -70,13 +70,13 @@ function AddClassroom() {
               name="description"
               multiline
               rows={4}
-              value={formData.description}
-              onChange={handleChange}
+              value={данныеФормы.description}
+              onChange={обработатьИзменение}
             />
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/classrooms')}
+                onClick={() => навигатор('/classrooms')}
                 sx={{ mr: 2 }}
               >
                 Отмена
@@ -96,4 +96,4 @@ function AddClassroom() {
   );
 }
 
-export default AddClassroom;
+export default ДобавитьКабинет;

@@ -6,36 +6,36 @@ import MenuIcon from '@mui/icons-material/Menu';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
-const drawerWidth = 240;
+const ширинаМеню = 240;
 
-function Layout() {
-  const { user, logout } = useContext(AuthContext);
-  const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = React.useState(false);
+function Макет() {
+  const { пользователь, выйти } = useContext(AuthContext);
+  const навигатор = useNavigate();
+  const [мобильноеМенюОткрыто, установитьМобильноеМенюОткрыто] = React.useState(false);
 
-  const handleDrawerToggle = () => {
-    setMobileOpen(!mobileOpen);
+  const переключитьМеню = () => {
+    установитьМобильноеМенюОткрыто(!мобильноеМенюОткрыто);
   };
 
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
+  const обработатьВыход = () => {
+    выйти();
+    навигатор('/login');
   };
 
-  // Define menu items based on user role
-  const menuItems = user ? [
-    { text: 'Дашборд', icon: <DashboardIcon />, path: '/', roles: ['admin', 'teacher', 'student'] },
-    { text: 'Кабинеты', icon: <MeetingRoomIcon />, path: '/classrooms', roles: ['admin'] },
-    { text: 'Преподаватели', icon: <PersonIcon />, path: '/teachers', roles: ['admin'] },
-    { text: 'Группы', icon: <GroupIcon />, path: '/groups', roles: ['admin', 'teacher'] },
-    { text: 'Ученики', icon: <SchoolIcon />, path: '/students', roles: ['admin', 'teacher'] },
-    { text: 'Расписание', icon: <CalendarTodayIcon />, path: '/schedule', roles: ['admin', 'teacher', 'student'] },
-    { text: 'Посещаемость', icon: <CheckCircleIcon />, path: '/attendance', roles: ['admin', 'teacher'] },
-    { text: 'Финансы', icon: <AttachMoneyIcon />, path: '/finances', roles: ['admin'] },
-    { text: 'Управление доступом', icon: <SecurityIcon />, path: '/access-control', roles: ['admin'] }
-  ].filter(item => item.roles.includes(user.role)) : [];
+  // Определение пунктов меню на основе роли пользователя
+  const пунктыМеню = пользователь ? [
+    { текст: 'Панель управления', иконка: <DashboardIcon />, путь: '/', роли: ['admin', 'teacher', 'student'] },
+    { текст: 'Кабинеты', иконка: <MeetingRoomIcon />, путь: '/classrooms', роли: ['admin'] },
+    { текст: 'Преподаватели', иконка: <PersonIcon />, путь: '/teachers', роли: ['admin'] },
+    { текст: 'Группы', иконка: <GroupIcon />, путь: '/groups', роли: ['admin', 'teacher'] },
+    { текст: 'Ученики', иконка: <SchoolIcon />, путь: '/students', роли: ['admin', 'teacher'] },
+    { текст: 'Расписание', иконка: <CalendarTodayIcon />, путь: '/schedule', роли: ['admin', 'teacher', 'student'] },
+    { текст: 'Посещаемость', иконка: <CheckCircleIcon />, путь: '/attendance', роли: ['admin', 'teacher'] },
+    { текст: 'Финансы', иконка: <AttachMoneyIcon />, путь: '/finances', роли: ['admin'] },
+    { текст: 'Управление доступом', иконка: <SecurityIcon />, путь: '/access-control', роли: ['admin'] }
+  ].filter(элемент => элемент.роли.includes(пользователь.role)) : [];
 
-  const drawer = (
+  const меню = (
     <div>
       <Toolbar>
         <Typography variant="h6" noWrap component="div">
@@ -44,13 +44,13 @@ function Layout() {
       </Toolbar>
       <Divider />
       <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton component={Link} to={item.path}>
+        {пунктыМеню.map((элемент) => (
+          <ListItem key={элемент.текст} disablePadding>
+            <ListItemButton component={Link} to={элемент.путь}>
               <ListItemIcon>
-                {item.icon}
+                {элемент.иконка}
               </ListItemIcon>
-              <ListItemText primary={item.text} />
+              <ListItemText primary={элемент.текст} />
             </ListItemButton>
           </ListItem>
         ))}
@@ -71,9 +71,9 @@ function Layout() {
         <Toolbar>
           <IconButton
             color="inherit"
-            aria-label="open drawer"
+            aria-label="открыть меню"
             edge="start"
-            onClick={handleDrawerToggle}
+            onClick={переключитьМеню}
             sx={{ mr: 2, display: { sm: 'none' } }}
           >
             <MenuIcon />
@@ -81,18 +81,18 @@ function Layout() {
           <Typography variant="h6" noWrap component="div" sx={{ color: '#ffffff', flexGrow: 1 }}>
             Prof-IT - Управление школой
           </Typography>
-          {user && (
+          {пользователь && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
               <Typography variant="body2" sx={{ color: '#ffffff' }}>
-                {user.firstName} {user.lastName} ({user.role})
+                {пользователь.firstName} {пользователь.lastName} ({пользователь.role})
               </Typography>
               <Button
                 color="inherit"
                 startIcon={<LogoutIcon />}
-                onClick={handleLogout}
+                onClick={обработатьВыход}
                 sx={{ color: '#ffffff' }}
               >
-                Logout
+                Выйти
               </Button>
             </Box>
           )}
@@ -101,31 +101,31 @@ function Layout() {
 
       <Box
         component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
+        sx={{ width: { sm: ширинаМеню }, flexShrink: { sm: 0 } }}
       >
         <Drawer
           variant="temporary"
-          open={mobileOpen}
-          onClose={handleDrawerToggle}
+          open={мобильноеМенюОткрыто}
+          onClose={переключитьМеню}
           ModalProps={{
             keepMounted: true,
           }}
           sx={{
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: ширинаМеню },
             display: { xs: 'block', sm: 'none' },
           }}
         >
-          {drawer}
+          {меню}
         </Drawer>
         <Drawer
           variant="permanent"
           sx={{
-            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: drawerWidth },
+            '& .MuiDrawer-paper': { boxSizing: 'border-box', width: ширинаМеню },
             display: { xs: 'none', sm: 'block' },
           }}
           open
         >
-          {drawer}
+          {меню}
         </Drawer>
       </Box>
       <Box component="main" sx={{ flexGrow: 1, p: 3, width: '100%', mt: 8 }}>
@@ -137,4 +137,4 @@ function Layout() {
   );
 }
 
-export default Layout;
+export default Макет;

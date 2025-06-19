@@ -4,40 +4,40 @@ import { Typography, Box, TextField, Button, Container, Paper, Chip } from '@mui
 import { Save as SaveIcon } from '@mui/icons-material';
 import api from '../services/api';
 
-function AddTeacher() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+function ДобавитьПреподавателя() {
+  const навигатор = useNavigate();
+  const [данныеФормы, установитьДанныеФормы] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
     subjects: []
   });
-  const [subjectInput, setSubjectInput] = useState('');
+  const [вводПредмета, установитьВводПредмета] = useState('');
 
-  const handleChange = (e) => {
+  const обработатьИзменение = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    установитьДанныеФормы({ ...данныеФормы, [name]: value });
   };
 
-  const handleAddSubject = () => {
-    if (subjectInput && !formData.subjects.includes(subjectInput)) {
-      setFormData({ ...formData, subjects: [...formData.subjects, subjectInput] });
-      setSubjectInput('');
+  const обработатьДобавлениеПредмета = () => {
+    if (вводПредмета && !данныеФормы.subjects.includes(вводПредмета)) {
+      установитьДанныеФормы({ ...данныеФормы, subjects: [...данныеФормы.subjects, вводПредмета] });
+      установитьВводПредмета('');
     }
   };
 
-  const handleDeleteSubject = (subjectToDelete) => () => {
-    setFormData({ ...formData, subjects: formData.subjects.filter(subject => subject !== subjectToDelete) });
+  const обработатьУдалениеПредмета = (удаляемыйПредмет) => () => {
+    установитьДанныеФормы({ ...данныеФормы, subjects: данныеФормы.subjects.filter(предмет => предмет !== удаляемыйПредмет) });
   };
 
-  const handleSubmit = async (e) => {
+  const обработатьОтправку = async (e) => {
     e.preventDefault();
     try {
-      await api.createTeacher(formData);
-      navigate('/teachers');
-    } catch (error) {
-      console.error('Ошибка при добавлении преподавателя:', error);
+      await api.createTeacher(данныеФормы);
+      навигатор('/teachers');
+    } catch (ошибка) {
+      console.error('Ошибка при добавлении преподавателя:', ошибка);
     }
   };
 
@@ -48,15 +48,15 @@ function AddTeacher() {
       </Typography>
       <Container component="main" maxWidth="sm" sx={{ mt: 3 }}>
         <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={обработатьОтправку}>
             <TextField
               margin="normal"
               required
               fullWidth
               label="Имя"
               name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
+              value={данныеФормы.firstName}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -64,8 +64,8 @@ function AddTeacher() {
               fullWidth
               label="Фамилия"
               name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
+              value={данныеФормы.lastName}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -74,16 +74,16 @@ function AddTeacher() {
               label="Email"
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
+              value={данныеФормы.email}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
               fullWidth
               label="Телефон"
               name="phone"
-              value={formData.phone}
-              onChange={handleChange}
+              value={данныеФормы.phone}
+              onChange={обработатьИзменение}
             />
             <Box sx={{ mt: 2 }}>
               <Typography variant="subtitle1" gutterBottom>
@@ -93,20 +93,20 @@ function AddTeacher() {
                 <TextField
                   fullWidth
                   label="Добавить предмет"
-                  value={subjectInput}
-                  onChange={(e) => setSubjectInput(e.target.value)}
+                  value={вводПредмета}
+                  onChange={(e) => установитьВводПредмета(e.target.value)}
                   sx={{ mr: 1 }}
                 />
-                <Button variant="outlined" onClick={handleAddSubject}>
+                <Button variant="outlined" onClick={обработатьДобавлениеПредмета}>
                   Добавить
                 </Button>
               </Box>
               <Box sx={{ mt: 1, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {formData.subjects.map((subject) => (
+                {данныеФормы.subjects.map((предмет) => (
                   <Chip
-                    key={subject}
-                    label={subject}
-                    onDelete={handleDeleteSubject(subject)}
+                    key={предмет}
+                    label={предмет}
+                    onDelete={обработатьУдалениеПредмета(предмет)}
                   />
                 ))}
               </Box>
@@ -114,7 +114,7 @@ function AddTeacher() {
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/teachers')}
+                onClick={() => навигатор('/teachers')}
                 sx={{ mr: 2 }}
               >
                 Отмена
@@ -134,4 +134,4 @@ function AddTeacher() {
   );
 }
 
-export default AddTeacher;
+export default ДобавитьПреподавателя;

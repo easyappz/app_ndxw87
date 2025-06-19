@@ -4,9 +4,9 @@ import { Typography, Box, TextField, Button, Container, Paper } from '@mui/mater
 import { Save as SaveIcon } from '@mui/icons-material';
 import api from '../services/api';
 
-function AddStudent() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+function ДобавитьУченика() {
+  const навигатор = useNavigate();
+  const [данныеФормы, установитьДанныеФормы] = useState({
     firstName: '',
     lastName: '',
     email: '',
@@ -16,18 +16,18 @@ function AddStudent() {
     balance: 0
   });
 
-  const handleChange = (e) => {
+  const обработатьИзменение = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    установитьДанныеФормы({ ...данныеФормы, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
+  const обработатьОтправку = async (e) => {
     e.preventDefault();
     try {
-      await api.createStudent(formData);
-      navigate('/students');
-    } catch (error) {
-      console.error('Ошибка при добавлении ученика:', error);
+      await api.createStudent(данныеФормы);
+      навигатор('/students');
+    } catch (ошибка) {
+      console.error('Ошибка при добавлении ученика:', ошибка);
     }
   };
 
@@ -38,15 +38,15 @@ function AddStudent() {
       </Typography>
       <Container component="main" maxWidth="sm" sx={{ mt: 3 }}>
         <Paper sx={{ p: 4, display: 'flex', flexDirection: 'column' }}>
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={обработатьОтправку}>
             <TextField
               margin="normal"
               required
               fullWidth
               label="Имя"
               name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
+              value={данныеФормы.firstName}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -54,8 +54,8 @@ function AddStudent() {
               fullWidth
               label="Фамилия"
               name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
+              value={данныеФормы.lastName}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
@@ -63,37 +63,37 @@ function AddStudent() {
               label="Email"
               name="email"
               type="email"
-              value={formData.email}
-              onChange={handleChange}
+              value={данныеФормы.email}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
               fullWidth
               label="Телефон"
               name="phone"
-              value={formData.phone}
-              onChange={handleChange}
+              value={данныеФормы.phone}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
               fullWidth
               label="Имя родителя"
               name="parentName"
-              value={formData.parentName}
-              onChange={handleChange}
+              value={данныеФормы.parentName}
+              onChange={обработатьИзменение}
             />
             <TextField
               margin="normal"
               fullWidth
               label="Телефон родителя"
               name="parentPhone"
-              value={formData.parentPhone}
-              onChange={handleChange}
+              value={данныеФормы.parentPhone}
+              onChange={обработатьИзменение}
             />
             <Box sx={{ mt: 3, display: 'flex', justifyContent: 'flex-end' }}>
               <Button
                 variant="outlined"
-                onClick={() => navigate('/students')}
+                onClick={() => навигатор('/students')}
                 sx={{ mr: 2 }}
               >
                 Отмена
@@ -113,4 +113,4 @@ function AddStudent() {
   );
 }
 
-export default AddStudent;
+export default ДобавитьУченика;

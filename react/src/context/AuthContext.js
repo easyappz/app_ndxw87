@@ -6,59 +6,59 @@ const API_URL = '/';
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [пользователь, установитьПользователя] = useState(null);
+  const [загрузка, установитьЗагрузку] = useState(true);
 
   useEffect(() => {
-    // Check if there is a token in local storage and fetch user data
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      fetchUserProfile();
+    // Проверяем, есть ли токен в локальном хранилище и получаем данные пользователя
+    const токен = localStorage.getItem('token');
+    if (токен) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${токен}`;
+      получитьПрофильПользователя();
     } else {
-      setLoading(false);
+      установитьЗагрузку(false);
     }
   }, []);
 
-  const fetchUserProfile = async () => {
+  const получитьПрофильПользователя = async () => {
     try {
-      setLoading(true);
-      const response = await axios.get(`${API_URL}api/auth/profile`);
-      setUser(response.data);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
+      установитьЗагрузку(true);
+      const ответ = await axios.get(`${API_URL}api/auth/profile`);
+      установитьПользователя(ответ.data);
+      установитьЗагрузку(false);
+    } catch (ошибка) {
+      console.error('Ошибка получения профиля пользователя:', ошибка);
       localStorage.removeItem('token');
       delete axios.defaults.headers.common['Authorization'];
-      setUser(null);
-      setLoading(false);
+      установитьПользователя(null);
+      установитьЗагрузку(false);
     }
   };
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-    setUser(userData);
+  const войти = (токен, данныеПользователя) => {
+    localStorage.setItem('token', токен);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${токен}`;
+    установитьПользователя(данныеПользователя);
   };
 
-  const logout = () => {
+  const выйти = () => {
     localStorage.removeItem('token');
     delete axios.defaults.headers.common['Authorization'];
-    setUser(null);
+    установитьПользователя(null);
   };
 
-  // Function to check if user has a specific role
-  const hasRole = (role) => {
-    return user && user.role === role;
+  // Функция для проверки, имеет ли пользователь определенную роль
+  const имеетРоль = (роль) => {
+    return пользователь && пользователь.role === роль;
   };
 
-  // Function to check if user has any of the allowed roles
-  const hasAnyRole = (roles) => {
-    return user && roles.includes(user.role);
+  // Функция для проверки, имеет ли пользователь одну из разрешенных ролей
+  const имеетЛюбуюРоль = (роли) => {
+    return пользователь && роли.includes(пользователь.role);
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, hasRole, hasAnyRole }}>
+    <AuthContext.Provider value={{ пользователь, загрузка, войти, выйти, имеетРоль, имеетЛюбуюРоль }}>
       {children}
     </AuthContext.Provider>
   );

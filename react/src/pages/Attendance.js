@@ -9,138 +9,138 @@ import api from '../services/api';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
-function Attendance() {
-  const { user } = useContext(AuthContext);
-  const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState('');
-  const [students, setStudents] = useState([]);
-  const [attendanceData, setAttendanceData] = useState([]);
-  const [highlightedDates, setHighlightedDates] = useState([]);
-  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
-  const [currentMonth, setCurrentMonth] = useState(dayjs().format('YYYY-MM'));
+function Посещаемость() {
+  const { пользователь } = useContext(AuthContext);
+  const [группы, установитьГруппы] = useState([]);
+  const [выбраннаяГруппа, установитьВыбраннуюГруппу] = useState('');
+  const [ученики, установитьУчеников] = useState([]);
+  const [данныеПосещаемости, установитьДанныеПосещаемости] = useState([]);
+  const [подсвеченныеДаты, установитьПодсвеченныеДаты] = useState([]);
+  const [дата, установитьДату] = useState(dayjs().format('YYYY-MM-DD'));
+  const [текущийМесяц, установитьТекущийМесяц] = useState(dayjs().format('YYYY-MM'));
 
   useEffect(() => {
-    fetchGroups();
-  }, [user]);
+    получитьГруппы();
+  }, [пользователь]);
 
   useEffect(() => {
-    if (selectedGroup) {
-      fetchStudents(selectedGroup);
-      fetchAttendance(selectedGroup, date);
-      fetchHighlightedDates(selectedGroup, currentMonth);
+    if (выбраннаяГруппа) {
+      получитьУчеников(выбраннаяГруппа);
+      получитьПосещаемость(выбраннаяГруппа, дата);
+      получитьПодсвеченныеДаты(выбраннаяГруппа, текущийМесяц);
     }
-  }, [selectedGroup, date, currentMonth, user]);
+  }, [выбраннаяГруппа, дата, текущийМесяц, пользователь]);
 
-  const fetchGroups = async () => {
+  const получитьГруппы = async () => {
     try {
-      const data = await api.getGroups();
-      // Filter groups based on user role
-      if (user && user.role === 'teacher') {
-        // Teachers see only their groups - placeholder until backend implements filtering
-        setGroups(data); // Temporary
+      const данные = await api.getGroups();
+      // Фильтрация групп на основе роли пользователя
+      if (пользователь && пользователь.role === 'teacher') {
+        // Преподаватели видят только свои группы - временное решение до реализации фильтрации на бэкенде
+        установитьГруппы(данные); // Временное решение
       } else {
-        setGroups(data); // Admin sees all
+        установитьГруппы(данные); // Администратор видит все
       }
-    } catch (error) {
-      console.error('Ошибка при загрузке групп:', error);
+    } catch (ошибка) {
+      console.error('Ошибка при загрузке групп:', ошибка);
     }
   };
 
-  const fetchStudents = async (groupId) => {
+  const получитьУчеников = async (идентификаторГруппы) => {
     try {
-      const groupData = await api.getGroups();
-      const group = groupData.find(g => g._id === groupId);
-      setStudents(group.students || []);
-      const initialAttendance = (group.students || []).map(student => ({
-        student: student._id,
+      const данныеГруппы = await api.getGroups();
+      const группа = данныеГруппы.find(г => г._id === идентификаторГруппы);
+      установитьУчеников(группа.students || []);
+      const начальнаяПосещаемость = (группа.students || []).map(ученик => ({
+        student: ученик._id,
         status: 'absent'
       }));
-      setAttendanceData(initialAttendance);
-    } catch (error) {
-      console.error('Ошибка при загрузке учеников:', error);
+      установитьДанныеПосещаемости(начальнаяПосещаемость);
+    } catch (ошибка) {
+      console.error('Ошибка при загрузке учеников:', ошибка);
     }
   };
 
-  const fetchAttendance = async (groupId, selectedDate) => {
+  const получитьПосещаемость = async (идентификаторГруппы, выбраннаяДата) => {
     try {
-      const data = await api.getAttendanceReport({
-        groupId,
-        startDate: selectedDate,
-        endDate: selectedDate
+      const данные = await api.getAttendanceReport({
+        groupId: идентификаторГруппы,
+        startDate: выбраннаяДата,
+        endDate: выбраннаяДата
       });
-      if (data.length > 0) {
-        const existingData = data.map(record => ({
-          student: record.student._id,
-          status: record.status
+      if (данные.length > 0) {
+        const существующиеДанные = данные.map(запись => ({
+          student: запись.student._id,
+          status: запись.status
         }));
-        setAttendanceData(existingData);
+        установитьДанныеПосещаемости(существующиеДанные);
       } else {
-        setAttendanceData(students.map(student => ({
-          student: student._id,
+        установитьДанныеПосещаемости(ученики.map(ученик => ({
+          student: ученик._id,
           status: 'absent'
         })));
       }
-    } catch (error) {
-      console.error('Ошибка при загрузке данных о посещаемости:', error);
+    } catch (ошибка) {
+      console.error('Ошибка при загрузке данных о посещаемости:', ошибка);
     }
   };
 
-  const fetchHighlightedDates = async (groupId, month) => {
+  const получитьПодсвеченныеДаты = async (идентификаторГруппы, месяц) => {
     try {
-      const startDate = `${month}-01`;
-      const endDate = dayjs(startDate).add(1, 'month').format('YYYY-MM-DD');
-      const data = await api.getAttendanceDates({
-        groupId,
-        startDate,
-        endDate
+      const начальнаяДата = `${месяц}-01`;
+      const конечнаяДата = dayjs(начальнаяДата).add(1, 'month').format('YYYY-MM-DD');
+      const данные = await api.getAttendanceDates({
+        groupId: идентификаторГруппы,
+        startDate: начальнаяДата,
+        endDate: конечнаяДата
       });
-      const dates = data.map(record => dayjs(record.date).format('YYYY-MM-DD'));
-      setHighlightedDates(dates);
-    } catch (error) {
-      console.error('Ошибка при загрузке дат для подсветки:', error);
+      const даты = данные.map(запись => dayjs(запись.date).format('YYYY-MM-DD'));
+      установитьПодсвеченныеДаты(даты);
+    } catch (ошибка) {
+      console.error('Ошибка при загрузке дат для подсветки:', ошибка);
     }
   };
 
-  const handleGroupChange = (event) => {
-    setSelectedGroup(event.target.value);
+  const обработатьИзменениеГруппы = (событие) => {
+    установитьВыбраннуюГруппу(событие.target.value);
   };
 
-  const handleStatusChange = (studentId, status) => {
-    setAttendanceData(attendanceData.map(record => 
-      record.student === studentId ? { ...record, status } : record
+  const обработатьИзменениеСтатуса = (идентификаторУченика, статус) => {
+    установитьДанныеПосещаемости(данныеПосещаемости.map(запись => 
+      запись.student === идентификаторУченика ? { ...запись, status: статус } : запись
     ));
   };
 
-  const handleSave = async () => {
+  const обработатьСохранение = async () => {
     try {
-      for (const record of attendanceData) {
+      for (const запись of данныеПосещаемости) {
         await api.createAttendance({
-          student: record.student,
-          group: selectedGroup,
-          date: new Date(date),
-          status: record.status
+          student: запись.student,
+          group: выбраннаяГруппа,
+          date: new Date(дата),
+          status: запись.status
         });
       }
       alert('Данные о посещаемости сохранены');
-      fetchHighlightedDates(selectedGroup, currentMonth);
-    } catch (error) {
-      console.error('Ошибка при сохранении данных о посещаемости:', error);
+      получитьПодсвеченныеДаты(выбраннаяГруппа, текущийМесяц);
+    } catch (ошибка) {
+      console.error('Ошибка при сохранении данных о посещаемости:', ошибка);
     }
   };
 
-  const handleDateChange = (newDate) => {
-    const formattedDate = newDate.format('YYYY-MM-DD');
-    setDate(formattedDate);
-    setCurrentMonth(newDate.format('YYYY-MM'));
+  const обработатьИзменениеДаты = (новаяДата) => {
+    const отформатированнаяДата = новаяДата.format('YYYY-MM-DD');
+    установитьДату(отформатированнаяДата);
+    установитьТекущийМесяц(новаяДата.format('YYYY-MM'));
   };
 
-  const handleMonthChange = (newMonth) => {
-    setCurrentMonth(newMonth.format('YYYY-MM'));
+  const обработатьИзменениеМесяца = (новыйМесяц) => {
+    установитьТекущийМесяц(новыйМесяц.format('YYYY-MM'));
   };
 
-  const shouldHighlightDate = (day) => {
-    const formattedDay = day.format('YYYY-MM-DD');
-    return highlightedDates.includes(formattedDay);
+  const нужноПодсветитьДату = (день) => {
+    const отформатированныйДень = день.format('YYYY-MM-DD');
+    return подсвеченныеДаты.includes(отформатированныйДень);
   };
 
   return (
@@ -152,13 +152,13 @@ function Attendance() {
         <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Выберите группу</InputLabel>
           <Select
-            value={selectedGroup}
-            onChange={handleGroupChange}
+            value={выбраннаяГруппа}
+            onChange={обработатьИзменениеГруппы}
             label="Выберите группу"
           >
-            {groups.map(group => (
-              <MenuItem key={group._id} value={group._id}>
-                {group.name} - {group.subject}
+            {группы.map(группа => (
+              <MenuItem key={группа._id} value={группа._id}>
+                {группа.name} - {группа.subject}
               </MenuItem>
             ))}
           </Select>
@@ -166,8 +166,8 @@ function Attendance() {
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
-          onClick={handleSave}
-          disabled={!selectedGroup || students.length === 0}
+          onClick={обработатьСохранение}
+          disabled={!выбраннаяГруппа || ученики.length === 0}
         >
           Сохранить
         </Button>
@@ -179,19 +179,19 @@ function Attendance() {
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
             <DateCalendar
-              value={dayjs(date)}
-              onChange={handleDateChange}
-              onMonthChange={handleMonthChange}
-              shouldDisableDate={(day) => !shouldHighlightDate(day) && !day.isSame(dayjs(date), 'day')}
+              value={dayjs(дата)}
+              onChange={обработатьИзменениеДаты}
+              onMonthChange={обработатьИзменениеМесяца}
+              shouldDisableDate={(день) => !нужноПодсветитьДату(день) && !день.isSame(dayjs(дата), 'day')}
               slots={{
                 day: ({ day, ...props }) => (
                   <Button
                     {...props}
                     sx={{
-                      backgroundColor: shouldHighlightDate(day) ? '#ff4081' : 'transparent',
-                      color: shouldHighlightDate(day) ? 'white' : 'inherit',
+                      backgroundColor: нужноПодсветитьДату(day) ? '#ff4081' : 'transparent',
+                      color: нужноПодсветитьДату(day) ? 'white' : 'inherit',
                       '&:hover': {
-                        backgroundColor: shouldHighlightDate(day) ? '#e6005c' : 'rgba(0, 0, 0, 0.04)',
+                        backgroundColor: нужноПодсветитьДату(day) ? '#e6005c' : 'rgba(0, 0, 0, 0.04)',
                       },
                       borderRadius: '50%',
                       width: 36,
@@ -208,22 +208,22 @@ function Attendance() {
         </Box>
       </Box>
       <Grid container spacing={3}>
-        {selectedGroup ? (
-          students.length > 0 ? (
-            students.map(student => {
-              const attendanceRecord = attendanceData.find(record => record.student === student._id);
+        {выбраннаяГруппа ? (
+          ученики.length > 0 ? (
+            ученики.map(ученик => {
+              const записьПосещаемости = данныеПосещаемости.find(запись => запись.student === ученик._id);
               return (
-                <Grid item xs={12} sm={6} key={student._id}>
+                <Grid item xs={12} sm={6} key={ученик._id}>
                   <Card>
                     <CardContent sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <Typography variant="h6">
-                        {student.firstName} {student.lastName}
+                        {ученик.firstName} {ученик.lastName}
                       </Typography>
                       <Box>
                         <ToggleButtonGroup
-                          value={attendanceRecord ? attendanceRecord.status : 'absent'}
+                          value={записьПосещаемости ? записьПосещаемости.status : 'absent'}
                           exclusive
-                          onChange={(e, value) => handleStatusChange(student._id, value || 'absent')}
+                          onChange={(e, значение) => обработатьИзменениеСтатуса(ученик._id, значение || 'absent')}
                           size="small"
                         >
                           <ToggleButton value="present" sx={{ color: 'green' }}>Присутствует</ToggleButton>
@@ -255,4 +255,4 @@ function Attendance() {
   );
 }
 
-export default Attendance;
+export default Посещаемость;

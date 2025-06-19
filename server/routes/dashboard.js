@@ -4,12 +4,12 @@ const Учитель = require('../models/Teacher');
 const Группа = require('../models/Group');
 const Посещаемость = require('../models/Attendance');
 const Платеж = require('../models/Payment');
-const { проверитьРоль } = require('../middleware/auth');
+const { checkRole, authenticateUser } = require('../middleware/auth');
 
 const маршрутизатор = express.Router();
 
 // Сводные данные для панели управления
-маршрутизатор.get('/dashboard-summary', проверитьРоль(['admin', 'teacher']), async (запрос, ответ) => {
+маршрутизатор.get('/dashboard-summary', authenticateUser, checkRole(['admin', 'teacher']), async (запрос, ответ) => {
   try {
     const количествоСтудентов = await Студент.countDocuments();
     const количествоУчителей = await Учитель.countDocuments();
@@ -89,7 +89,7 @@ const маршрутизатор = express.Router();
 });
 
 // Недавние активности для панели управления
-маршрутизатор.get('/recent-activities', проверитьРоль(['admin', 'teacher']), async (запрос, ответ) => {
+маршрутизатор.get('/recent-activities', authenticateUser, checkRole(['admin', 'teacher']), async (запрос, ответ) => {
   try {
     const сейчас = new Date();
     const семьДнейНазад = new Date(сейчас.setDate(сейчас.getDate() - 7));

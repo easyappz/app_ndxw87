@@ -16,6 +16,14 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Пользователь с этим email уже существует' });
     }
 
+    // Проверка при регистрации пользователя с ролью admin
+    if (role === 'admin') {
+      const existingAdmin = await User.findOne({ role: 'admin' });
+      if (existingAdmin) {
+        return res.status(403).json({ message: 'Администратор уже существует. Регистрация нового администратора запрещена.' });
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({
       email,
@@ -110,6 +118,20 @@ router.post('/create-admin', async (req, res) => {
   } catch (error) {
     console.error('Ошибка создания администратора:', error.message);
     res.status(500).json({ message: 'Ошибка при создании администратора', error: error.message });
+  }
+});
+
+// Проверка существования администратора
+router.get('/check-admin', async (req, res) => {
+  try {
+    const existingAdmin = await User.findOne({ role: 'admin' });
+    if (existingAdmin) {
+      return res.json({ exists: true });
+    }
+    res.json({ exists: false });
+  } catch (error) {
+    console.error('Ошибка проверки существования администратора:', error.message);
+    res.status(500).json({ message: 'Ошибка при проверке существования администратора', error: error.message });
   }
 });
 

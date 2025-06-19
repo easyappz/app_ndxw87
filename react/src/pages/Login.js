@@ -26,7 +26,7 @@ const Login = () => {
       login(response.data.token, response.data.user);
       navigate('/');
     } catch (err) {
-      setError('Invalid email or password. Please try again.');
+      setError('Неверный email или пароль. Пожалуйста, попробуйте снова.');
       setLoading(false);
       console.error(err);
     }
@@ -38,10 +38,10 @@ const Login = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
           <LockOutlinedIcon color="primary" fontSize="large" />
           <Typography component="h1" variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>
-            Sign In
+            Вход
           </Typography>
           <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary', textAlign: 'center' }}>
-            Sign in as Administrator, Teacher, or Student
+            Войдите как администратор, учитель или ученик
           </Typography>
         </Box>
         {error && (
@@ -54,7 +54,7 @@ const Login = () => {
             margin="normal"
             required
             fullWidth
-            label="Email Address"
+            label="Адрес электронной почты"
             name="email"
             autoComplete="email"
             autoFocus
@@ -66,7 +66,7 @@ const Login = () => {
             required
             fullWidth
             name="password"
-            label="Password"
+            label="Пароль"
             type="password"
             autoComplete="current-password"
             value={password}
@@ -80,7 +80,7 @@ const Login = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Sign In'}
+            {loading ? <CircularProgress size={24} /> : 'Войти'}
           </Button>
           <Button
             fullWidth
@@ -90,7 +90,7 @@ const Login = () => {
             onClick={() => navigate('/register')}
             disabled={loading}
           >
-            Don't have an account? Register
+            Нет аккаунта? Зарегистрироваться
           </Button>
         </form>
       </Paper>

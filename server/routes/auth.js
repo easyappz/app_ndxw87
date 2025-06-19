@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { JWT_SECRET, аутентифицироватьПользователя, проверитьРоль } = require('../middleware/auth');
+const { JWT_SECRET, authenticateUser, checkRole } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -13,14 +13,14 @@ router.post('/register', async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Пользователь с этим email уже существует' });
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     // Проверка при регистрации пользователя с ролью admin
     if (role === 'admin') {
       const existingAdmin = await User.findOne({ role: 'admin' });
       if (existingAdmin) {
-        return res.status(403).json({ message: 'Администратор уже существует. Регистрация нового администратора запрещена.' });
+        return res.status(403).json({ message: 'Administrator already exists. Registration of a new administrator is prohibited.' });
       }
     }
 
@@ -38,10 +38,10 @@ router.post('/register', async (req, res) => {
 
     await newUser.save();
 
-    res.status(201).json({ message: 'Пользователь успешно зарегистрирован', userId: newUser._id });
+    res.status(201).json({ message: 'User successfully registered', userId: newUser._id });
   } catch (error) {
-    console.error('Ошибка регистрации:', error.message);
-    res.status(500).json({ message: 'Ошибка при регистрации пользователя', error: error.message });
+    console.error('Registration error:', error.message);
+    res.status(500).json({ message: 'Error registering user', error: error.message });
   }
 });
 
@@ -52,19 +52,19 @@ router.post('/login', async (req, res) => {
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ message: 'Неверный email или пароль' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Неверный email или пароль' });
+      return res.status(400).json({ message: 'Invalid email or password' });
     }
 
     const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
     res.json({ token, user: { id: user._id, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName } });
   } catch (error) {
-    console.error('Ошибка входа:', error.message);
-    res.status(500).json({ message: 'Ошибка при входе', error: error.message });
+    console.error('Login error:', error.message);
+    res.status(500).json({ message: 'Error during login', error: error.message });
   }
 });
 
@@ -73,12 +73,12 @@ router.get('/profile', async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select('-password');
     if (!user) {
-      return res.status(404).json({ message: 'Пользователь не найден' });
+      return res.status(404).json({ message: 'User not found' });
     }
     res.json(user);
   } catch (error) {
-    console.error('Ошибка получения профиля:', error.message);
-    res.status(500).json({ message: 'Ошибка при получении профиля пользователя', error: error.message });
+    console.error('Profile retrieval error:', error.message);
+    res.status(500).json({ message: 'Error retrieving user profile', error: error.message });
   }
 });
 
@@ -88,7 +88,7 @@ router.post('/create-admin', async (req, res) => {
     // Проверяем, существует ли уже пользователь с ролью admin
     const existingAdmin = await User.findOne({ role: 'admin' });
     if (existingAdmin) {
-      return res.status(403).json({ message: 'Администратор уже существует. Создание нового администратора запрещено.' });
+      return res.status(403).json({ message: 'Administrator already exists. Creation of a new administrator is prohibited.' });
     }
 
     const { email, password, firstName, lastName } = req.body;
@@ -96,7 +96,7 @@ router.post('/create-admin', async (req, res) => {
     // Проверка на существование пользователя с таким email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Пользователь с этим email уже существует' });
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     // Создаем нового администратора
@@ -114,10 +114,10 @@ router.post('/create-admin', async (req, res) => {
 
     await adminUser.save();
 
-    res.status(201).json({ message: 'Администратор успешно создан', userId: adminUser._id });
+    res.status(201).json({ message: 'Administrator successfully created', userId: adminUser._id });
   } catch (error) {
-    console.error('Ошибка создания администратора:', error.message);
-    res.status(500).json({ message: 'Ошибка при создании администратора', error: error.message });
+    console.error('Admin creation error:', error.message);
+    res.status(500).json({ message: 'Error creating administrator', error: error.message });
   }
 });
 
@@ -130,20 +130,20 @@ router.get('/check-admin', async (req, res) => {
     }
     res.json({ exists: false });
   } catch (error) {
-    console.error('Ошибка проверки существования администратора:', error.message);
-    res.status(500).json({ message: 'Ошибка при проверке существования администратора', error: error.message });
+    console.error('Admin existence check error:', error.message);
+    res.status(500).json({ message: 'Error checking administrator existence', error: error.message });
   }
 });
 
 // Новый маршрут для регистрации администратора (доступен только для существующих администраторов)
-router.post('/register-admin', аутентифицироватьПользователя, проверитьРоль(['admin']), async (req, res) => {
+router.post('/register-admin', authenticateUser, checkRole(['admin']), async (req, res) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
     // Проверка на существование пользователя с таким email
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ message: 'Пользователь с этим email уже существует' });
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
     // Создаем нового администратора
@@ -161,10 +161,10 @@ router.post('/register-admin', аутентифицироватьПользов�
 
     await newAdmin.save();
 
-    res.status(201).json({ message: 'Новый администратор успешно зарегистрирован', userId: newAdmin._id });
+    res.status(201).json({ message: 'New administrator successfully registered', userId: newAdmin._id });
   } catch (error) {
-    console.error('Ошибка регистрации нового администратора:', error.message);
-    res.status(500).json({ message: 'Ошибка при регистрации нового администратора', error: error.message });
+    console.error('New admin registration error:', error.message);
+    res.status(500).json({ message: 'Error registering new administrator', error: error.message });
   }
 });
 

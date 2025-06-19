@@ -1,21 +1,369 @@
 const express = require('express');
-
-// Для работы с базой данных
-const mongoDb = global.mongoDb;
+const Classroom = require('./models/Classroom');
+const Teacher = require('./models/Teacher');
+const Group = require('./models/Group');
+const Student = require('./models/Student');
+const Schedule = require('./models/Schedule');
+const Attendance = require('./models/Attendance');
+const Payment = require('./models/Payment');
 
 const router = express.Router();
 
-// GET /api/hello
-router.get('/hello', (req, res) => {
-  res.json({ message: 'Hello from API!' });
+// Classroom Routes
+router.get('/classrooms', async (req, res) => {
+  try {
+    const classrooms = await Classroom.find();
+    res.json(classrooms);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching classrooms', error: err.message });
+  }
 });
 
-// GET /api/status
-router.get('/status', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    timestamp: new Date().toISOString()
-  });
+router.post('/classrooms', async (req, res) => {
+  try {
+    const classroom = new Classroom(req.body);
+    await classroom.save();
+    res.status(201).json(classroom);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating classroom', error: err.message });
+  }
+});
+
+router.put('/classrooms/:id', async (req, res) => {
+  try {
+    const classroom = await Classroom.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+    res.json(classroom);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating classroom', error: err.message });
+  }
+});
+
+router.delete('/classrooms/:id', async (req, res) => {
+  try {
+    const classroom = await Classroom.findByIdAndDelete(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+    res.json({ message: 'Classroom deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting classroom', error: err.message });
+  }
+});
+
+// Teacher Routes
+router.get('/teachers', async (req, res) => {
+  try {
+    const teachers = await Teacher.find();
+    res.json(teachers);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching teachers', error: err.message });
+  }
+});
+
+router.post('/teachers', async (req, res) => {
+  try {
+    const teacher = new Teacher(req.body);
+    await teacher.save();
+    res.status(201).json(teacher);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating teacher', error: err.message });
+  }
+});
+
+router.put('/teachers/:id', async (req, res) => {
+  try {
+    const teacher = await Teacher.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    res.json(teacher);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating teacher', error: err.message });
+  }
+});
+
+router.delete('/teachers/:id', async (req, res) => {
+  try {
+    const teacher = await Teacher.findByIdAndDelete(req.params.id);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    res.json({ message: 'Teacher deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting teacher', error: err.message });
+  }
+});
+
+// Group Routes
+router.get('/groups', async (req, res) => {
+  try {
+    const groups = await Group.find().populate('teacher students');
+    res.json(groups);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching groups', error: err.message });
+  }
+});
+
+router.post('/groups', async (req, res) => {
+  try {
+    const group = new Group(req.body);
+    await group.save();
+    res.status(201).json(group);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating group', error: err.message });
+  }
+});
+
+router.put('/groups/:id', async (req, res) => {
+  try {
+    const group = await Group.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    res.json(group);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating group', error: err.message });
+  }
+});
+
+router.delete('/groups/:id', async (req, res) => {
+  try {
+    const group = await Group.findByIdAndDelete(req.params.id);
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    res.json({ message: 'Group deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting group', error: err.message });
+  }
+});
+
+// Student Routes
+router.get('/students', async (req, res) => {
+  try {
+    const students = await Student.find();
+    res.json(students);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching students', error: err.message });
+  }
+});
+
+router.post('/students', async (req, res) => {
+  try {
+    const student = new Student(req.body);
+    await student.save();
+    res.status(201).json(student);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating student', error: err.message });
+  }
+});
+
+router.put('/students/:id', async (req, res) => {
+  try {
+    const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    res.json(student);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating student', error: err.message });
+  }
+});
+
+router.delete('/students/:id', async (req, res) => {
+  try {
+    const student = await Student.findByIdAndDelete(req.params.id);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    res.json({ message: 'Student deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting student', error: err.message });
+  }
+});
+
+// Schedule Routes
+router.get('/schedules', async (req, res) => {
+  try {
+    const schedules = await Schedule.find().populate('group classroom');
+    res.json(schedules);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching schedules', error: err.message });
+  }
+});
+
+router.post('/schedules', async (req, res) => {
+  try {
+    const schedule = new Schedule(req.body);
+    await schedule.save();
+    res.status(201).json(schedule);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating schedule', error: err.message });
+  }
+});
+
+router.put('/schedules/:id', async (req, res) => {
+  try {
+    const schedule = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!schedule) {
+      return res.status(404).json({ message: 'Schedule not found' });
+    }
+    res.json(schedule);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating schedule', error: err.message });
+  }
+});
+
+router.delete('/schedules/:id', async (req, res) => {
+  try {
+    const schedule = await Schedule.findByIdAndDelete(req.params.id);
+    if (!schedule) {
+      return res.status(404).json({ message: 'Schedule not found' });
+    }
+    res.json({ message: 'Schedule deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting schedule', error: err.message });
+  }
+});
+
+// Attendance Routes
+router.get('/attendances', async (req, res) => {
+  try {
+    const attendances = await Attendance.find().populate('student schedule');
+    res.json(attendances);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching attendances', error: err.message });
+  }
+});
+
+router.post('/attendances', async (req, res) => {
+  try {
+    const attendance = new Attendance(req.body);
+    await attendance.save();
+    res.status(201).json(attendance);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating attendance', error: err.message });
+  }
+});
+
+router.put('/attendances/:id', async (req, res) => {
+  try {
+    const attendance = await Attendance.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!attendance) {
+      return res.status(404).json({ message: 'Attendance not found' });
+    }
+    res.json(attendance);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating attendance', error: err.message });
+  }
+});
+
+router.delete('/attendances/:id', async (req, res) => {
+  try {
+    const attendance = await Attendance.findByIdAndDelete(req.params.id);
+    if (!attendance) {
+      return res.status(404).json({ message: 'Attendance not found' });
+    }
+    res.json({ message: 'Attendance deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting attendance', error: err.message });
+  }
+});
+
+// Payment Routes
+router.get('/payments', async (req, res) => {
+  try {
+    const payments = await Payment.find().populate('student');
+    res.json(payments);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching payments', error: err.message });
+  }
+});
+
+router.post('/payments', async (req, res) => {
+  try {
+    const payment = new Payment(req.body);
+    await payment.save();
+    res.status(201).json(payment);
+  } catch (err) {
+    res.status(400).json({ message: 'Error creating payment', error: err.message });
+  }
+});
+
+router.put('/payments/:id', async (req, res) => {
+  try {
+    const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+    res.json(payment);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating payment', error: err.message });
+  }
+});
+
+router.delete('/payments/:id', async (req, res) => {
+  try {
+    const payment = await Payment.findByIdAndDelete(req.params.id);
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+    res.json({ message: 'Payment deleted' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting payment', error: err.message });
+  }
+});
+
+// Confirm Payment
+router.post('/payments/:id/confirm', async (req, res) => {
+  try {
+    const payment = await Payment.findByIdAndUpdate(
+      req.params.id, 
+      { confirmed: true }, 
+      { new: true }
+    );
+    if (!payment) {
+      return res.status(404).json({ message: 'Payment not found' });
+    }
+    res.json(payment);
+  } catch (err) {
+    res.status(400).json({ message: 'Error confirming payment', error: err.message });
+  }
+});
+
+// Attendance Report
+router.get('/reports/attendance', async (req, res) => {
+  try {
+    const { studentId, startDate, endDate } = req.query;
+    const query = {};
+    if (studentId) query.student = studentId;
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    const report = await Attendance.find(query).populate('student schedule');
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ message: 'Error generating attendance report', error: err.message });
+  }
+});
+
+// Payment Report
+router.get('/reports/payments', async (req, res) => {
+  try {
+    const { studentId, startDate, endDate } = req.query;
+    const query = {};
+    if (studentId) query.student = studentId;
+    if (startDate && endDate) {
+      query.paymentDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    const report = await Payment.find(query).populate('student');
+    res.json(report);
+  } catch (err) {
+    res.status(500).json({ message: 'Error generating payment report', error: err.message });
+  }
 });
 
 module.exports = router;

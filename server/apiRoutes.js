@@ -1,21 +1,21 @@
 const express = require('express');
-const authRoutes = require('./routes/auth');
-const dashboardRoutes = require('./routes/dashboard');
-const accessControlRoutes = require('./routes/accessControl');
-const protectedRoutes = require('./routes/protectedRoutes');
+const маршрутыАутентификации = require('./routes/auth');
+const маршрутыПанели = require('./routes/dashboard');
+const маршрутыКонтроляДоступа = require('./routes/accessControl');
+const защищенныеМаршруты = require('./routes/protectedRoutes');
 
-const router = express.Router();
+const маршрутизатор = express.Router();
 
-// Authentication routes
-router.use('/auth', authRoutes);
+// Маршруты аутентификации
+маршрутизатор.use('/auth', маршрутыАутентификации);
 
-// Dashboard routes
-router.use('/dashboard', dashboardRoutes);
+// Маршруты панели управления
+маршрутизатор.use('/dashboard', маршрутыПанели);
 
-// Access control routes
-router.use('/access-control', accessControlRoutes);
+// Маршруты контроля доступа
+маршрутизатор.use('/access-control', маршрутыКонтроляДоступа);
 
-// Protected routes based on roles
-router.use('/protected', protectedRoutes);
+// Защищенные маршруты на основе ролей
+маршрутизатор.use('/protected', защищенныеМаршруты);
 
-module.exports = router;
+module.exports = маршрутизатор;

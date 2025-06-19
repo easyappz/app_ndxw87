@@ -1,90 +1,90 @@
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const Пользователь = require('../models/User');
 
-// Secret key for JWT signing (hardcoded as per instructions)
-const JWT_SECRET = 'mysecretkey123';
+// Секретный ключ для подписи JWT (жестко закодирован по инструкции)
+const JWT_СЕКРЕТ = 'mysecretkey123';
 
-// Middleware to authenticate user based on JWT token
-const authenticateUser = async (req, res, next) => {
+// Middleware для аутентификации пользователя на основе JWT токена
+const аутентифицироватьПользователя = async (запрос, ответ, следующий) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ message: 'Authentication token required' });
+    const заголовокАутентификации = запрос.headers.authorization;
+    if (!заголовокАутентификации || !заголовокАутентификации.startsWith('Bearer ')) {
+      return ответ.status(401).json({ сообщение: 'Требуется токен аутентификации' });
     }
 
-    const token = authHeader.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ message: 'Invalid token format' });
+    const токен = заголовокАутентификации.split(' ')[1];
+    if (!токен) {
+      return ответ.status(401).json({ сообщение: 'Неверный формат токена' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    if (!decoded.userId) {
-      return res.status(401).json({ message: 'Invalid token payload' });
+    const декодированный = jwt.verify(токен, JWT_СЕКРЕТ);
+    if (!декодированный.userId) {
+      return ответ.status(401).json({ сообщение: 'Неверная полезная нагрузка токена' });
     }
 
-    const user = await User.findById(decoded.userId);
-    if (!user) {
-      return res.status(401).json({ message: 'User not found' });
+    const пользователь = await Пользователь.findById(декодированный.userId);
+    if (!пользователь) {
+      return ответ.status(401).json({ сообщение: 'Пользователь не найден' });
     }
 
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error('Authentication error:', error.message);
-    return res.status(401).json({ message: 'Invalid or expired token' });
+    запрос.user = пользователь;
+    следующий();
+  } catch (ошибка) {
+    console.error('Ошибка аутентификации:', ошибка.message);
+    return ответ.status(401).json({ сообщение: 'Неверный или просроченный токен' });
   }
 };
 
-// Middleware to check if user has required permissions
-const checkPermission = (resource, action) => {
-  return (req, res, next) => {
+// Middleware для проверки наличия необходимых прав доступа
+const проверитьРазрешение = (ресурс, действие) => {
+  return (запрос, ответ, следующий) => {
     try {
-      const user = req.user;
-      if (!user) {
-        return res.status(401).json({ message: 'User not authenticated' });
+      const пользователь = запрос.user;
+      if (!пользователь) {
+        return ответ.status(401).json({ сообщение: 'Пользователь не аутентифицирован' });
       }
 
-      if (user.role === 'admin') {
-        return next(); // Admin has access to everything
+      if (пользователь.role === 'admin') {
+        return следующий(); // Админ имеет доступ ко всему
       }
 
-      const permission = user.permissions.find(p => p.resource === resource);
-      if (!permission || !permission.actions.includes(action)) {
-        return res.status(403).json({ message: 'Insufficient permissions' });
+      const разрешение = пользователь.permissions.find(п => п.resource === ресурс);
+      if (!разрешение || !разрешение.actions.includes(действие)) {
+        return ответ.status(403).json({ сообщение: 'Недостаточно прав доступа' });
       }
 
-      next();
-    } catch (error) {
-      console.error('Permission check error:', error.message);
-      return res.status(500).json({ message: 'Error checking permissions' });
+      следующий();
+    } catch (ошибка) {
+      console.error('Ошибка проверки прав доступа:', ошибка.message);
+      return ответ.status(500).json({ сообщение: 'Ошибка при проверке прав доступа' });
     }
   };
 };
 
-// Middleware to restrict access based on role
-const checkRole = (allowedRoles) => {
-  return (req, res, next) => {
+// Middleware для ограничения доступа на основе роли
+const проверитьРоль = (разрешенныеРоли) => {
+  return (запрос, ответ, следующий) => {
     try {
-      const user = req.user;
-      if (!user) {
-        return res.status(401).json({ message: 'User not authenticated' });
+      const пользователь = запрос.user;
+      if (!пользователь) {
+        return ответ.status(401).json({ сообщение: 'Пользователь не аутентифицирован' });
       }
 
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({ message: 'Access denied for this role' });
+      if (!разрешенныеРоли.includes(пользователь.role)) {
+        return ответ.status(403).json({ сообщение: 'Доступ запрещен для этой роли' });
       }
 
-      next();
-    } catch (error) {
-      console.error('Role check error:', error.message);
-      return res.status(500).json({ message: 'Error checking role' });
+      следующий();
+    } catch (ошибка) {
+      console.error('Ошибка проверки роли:', ошибка.message);
+      return ответ.status(500).json({ сообщение: 'Ошибка при проверке роли' });
     }
   };
 };
 
 module.exports = {
-  authenticateUser,
-  checkPermission,
-  checkRole,
-  JWT_SECRET
+  аутентифицироватьПользователя,
+  проверитьРазрешение,
+  проверитьРоль,
+  JWT_СЕКРЕТ
 };

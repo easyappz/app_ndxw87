@@ -1,99 +1,99 @@
 const express = require('express');
-const User = require('../models/User');
-const { checkRole } = require('../middleware/auth');
+const Пользователь = require('../models/User');
+const { проверитьРоль } = require('../middleware/auth');
 
-const router = express.Router();
+const маршрутизатор = express.Router();
 
-// Get all users (Admin only)
-router.get('/users', checkRole(['admin']), async (req, res) => {
+// Получить всех пользователей (только для администратора)
+маршрутизатор.get('/users', проверитьРоль(['admin']), async (запрос, ответ) => {
   try {
-    const users = await User.find().select('-password');
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching users', error: err.message });
+    const пользователи = await Пользователь.find().select('-password');
+    ответ.json(пользователи);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при получении пользователей', ошибка: ошибка.message });
   }
 });
 
-// Get a specific user by ID (Admin only)
-router.get('/users/:id', checkRole(['admin']), async (req, res) => {
+// Получить конкретного пользователя по ID (только для администратора)
+маршрутизатор.get('/users/:id', проверитьРоль(['admin']), async (запрос, ответ) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const пользователь = await Пользователь.findById(запрос.params.id).select('-password');
+    if (!пользователь) {
+      return ответ.status(404).json({ сообщение: 'Пользователь не найден' });
     }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching user', error: err.message });
+    ответ.json(пользователь);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при получении пользователя', ошибка: ошибка.message });
   }
 });
 
-// Update user role (Admin only)
-router.put('/users/:id/role', checkRole(['admin']), async (req, res) => {
+// Обновить роль пользователя (только для администратора)
+маршрутизатор.put('/users/:id/role', проверитьРоль(['admin']), async (запрос, ответ) => {
   try {
-    const { role } = req.body;
+    const { role } = запрос.body;
     if (!['admin', 'teacher', 'student'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role value' });
+      return ответ.status(400).json({ сообщение: 'Неверное значение роли' });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
+    const пользователь = await Пользователь.findByIdAndUpdate(
+      запрос.params.id,
       { role },
       { new: true }
     ).select('-password');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!пользователь) {
+      return ответ.status(404).json({ сообщение: 'Пользователь не найден' });
     }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating user role', error: err.message });
+    ответ.json(пользователь);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при обновлении роли пользователя', ошибка: ошибка.message });
   }
 });
 
-// Update user permissions (Admin only)
-router.put('/users/:id/permissions', checkRole(['admin']), async (req, res) => {
+// Обновить права доступа пользователя (только для администратора)
+маршрутизатор.put('/users/:id/permissions', проверитьРоль(['admin']), async (запрос, ответ) => {
   try {
-    const { permissions } = req.body;
+    const { permissions } = запрос.body;
     if (!Array.isArray(permissions)) {
-      return res.status(400).json({ message: 'Permissions must be an array' });
+      return ответ.status(400).json({ сообщение: 'Права доступа должны быть массивом' });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
+    const пользователь = await Пользователь.findByIdAndUpdate(
+      запрос.params.id,
       { permissions },
       { new: true }
     ).select('-password');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!пользователь) {
+      return ответ.status(404).json({ сообщение: 'Пользователь не найден' });
     }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating user permissions', error: err.message });
+    ответ.json(пользователь);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при обновлении прав доступа пользователя', ошибка: ошибка.message });
   }
 });
 
-// Assign reference ID and model to user (Admin only)
-router.put('/users/:id/reference', checkRole(['admin']), async (req, res) => {
+// Назначить ссылочный ID и модель пользователю (только для администратора)
+маршрутизатор.put('/users/:id/reference', проверитьРоль(['admin']), async (запрос, ответ) => {
   try {
-    const { referenceId, referenceModel } = req.body;
+    const { referenceId, referenceModel } = запрос.body;
     if (referenceModel && !['Teacher', 'Student'].includes(referenceModel)) {
-      return res.status(400).json({ message: 'Invalid reference model' });
+      return ответ.status(400).json({ сообщение: 'Неверная модель ссылки' });
     }
 
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
+    const пользователь = await Пользователь.findByIdAndUpdate(
+      запрос.params.id,
       { referenceId, referenceModel },
       { new: true }
     ).select('-password');
 
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    if (!пользователь) {
+      return ответ.status(404).json({ сообщение: 'Пользователь не найден' });
     }
-    res.json(user);
-  } catch (err) {
-    res.status(500).json({ message: 'Error updating user reference', error: err.message });
+    ответ.json(пользователь);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при обновлении ссылки пользователя', ошибка: ошибка.message });
   }
 });
 
-module.exports = router;
+module.exports = маршрутизатор;

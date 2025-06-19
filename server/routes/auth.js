@@ -1,25 +1,25 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const User = require('../models/User');
-const { JWT_SECRET } = require('../middleware/auth');
+const Пользователь = require('../models/User');
+const { JWT_СЕКРЕТ } = require('../middleware/auth');
 
-const router = express.Router();
+const маршрутизатор = express.Router();
 
-// Register a new user
-router.post('/register', async (req, res) => {
+// Регистрация нового пользователя
+маршрутизатор.post('/register', async (запрос, ответ) => {
   try {
-    const { email, password, firstName, lastName, role, referenceId, referenceModel, permissions } = req.body;
+    const { email, password, firstName, lastName, role, referenceId, referenceModel, permissions } = запрос.body;
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
+    const существующийПользователь = await Пользователь.findOne({ email });
+    if (существующийПользователь) {
+      return ответ.status(400).json({ сообщение: 'Пользователь с этим email уже существует' });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new User({
+    const зашифрованныйПароль = await bcrypt.hash(password, 10);
+    const новыйПользователь = new Пользователь({
       email,
-      password: hashedPassword,
+      password: зашифрованныйПароль,
       firstName,
       lastName,
       role,
@@ -28,50 +28,50 @@ router.post('/register', async (req, res) => {
       permissions: role === 'admin' ? [] : permissions || []
     });
 
-    await newUser.save();
+    await новыйПользователь.save();
 
-    res.status(201).json({ message: 'User registered successfully', userId: newUser._id });
-  } catch (error) {
-    console.error('Registration error:', error.message);
-    res.status(500).json({ message: 'Error registering user', error: error.message });
+    ответ.status(201).json({ сообщение: 'Пользователь успешно зарегистрирован', userId: новыйПользователь._id });
+  } catch (ошибка) {
+    console.error('Ошибка регистрации:', ошибка.message);
+    ответ.status(500).json({ сообщение: 'Ошибка при регистрации пользователя', ошибка: ошибка.message });
   }
 });
 
-// Login user and return JWT token
-router.post('/login', async (req, res) => {
+// Вход пользователя и возврат JWT токена
+маршрутизатор.post('/login', async (запрос, ответ) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = запрос.body;
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+    const пользователь = await Пользователь.findOne({ email });
+    if (!пользователь) {
+      return ответ.status(400).json({ сообщение: 'Неверный email или пароль' });
     }
 
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid) {
-      return res.status(400).json({ message: 'Invalid email or password' });
+    const парольВерный = await bcrypt.compare(password, пользователь.password);
+    if (!парольВерный) {
+      return ответ.status(400).json({ сообщение: 'Неверный email или пароль' });
     }
 
-    const token = jwt.sign({ userId: user._id, role: user.role }, JWT_SECRET, { expiresIn: '1h' });
-    res.json({ token, user: { id: user._id, email: user.email, role: user.role, firstName: user.firstName, lastName: user.lastName } });
-  } catch (error) {
-    console.error('Login error:', error.message);
-    res.status(500).json({ message: 'Error logging in', error: error.message });
+    const токен = jwt.sign({ userId: пользователь._id, role: пользователь.role }, JWT_СЕКРЕТ, { expiresIn: '1h' });
+    ответ.json({ токен, пользователь: { id: пользователь._id, email: пользователь.email, role: пользователь.role, firstName: пользователь.firstName, lastName: пользователь.lastName } });
+  } catch (ошибка) {
+    console.error('Ошибка входа:', ошибка.message);
+    ответ.status(500).json({ сообщение: 'Ошибка при входе', ошибка: ошибка.message });
   }
 });
 
-// Get user profile
-router.get('/profile', async (req, res) => {
+// Получить профиль пользователя
+маршрутизатор.get('/profile', async (запрос, ответ) => {
   try {
-    const user = await User.findById(req.user._id).select('-password');
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+    const пользователь = await Пользователь.findById(запрос.user._id).select('-password');
+    if (!пользователь) {
+      return ответ.status(404).json({ сообщение: 'Пользователь не найден' });
     }
-    res.json(user);
-  } catch (error) {
-    console.error('Profile fetch error:', error.message);
-    res.status(500).json({ message: 'Error fetching user profile', error: error.message });
+    ответ.json(пользователь);
+  } catch (ошибка) {
+    console.error('Ошибка получения профиля:', ошибка.message);
+    ответ.status(500).json({ сообщение: 'Ошибка при получении профиля пользователя', ошибка: ошибка.message });
   }
 });
 
-module.exports = router;
+module.exports = маршрутизатор;

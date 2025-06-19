@@ -1,31 +1,31 @@
 const express = require('express');
-const Student = require('../models/Student');
-const Teacher = require('../models/Teacher');
-const Group = require('../models/Group');
-const Attendance = require('../models/Attendance');
-const Payment = require('../models/Payment');
-const { checkRole } = require('../middleware/auth');
+const Студент = require('../models/Student');
+const Учитель = require('../models/Teacher');
+const Группа = require('../models/Group');
+const Посещаемость = require('../models/Attendance');
+const Платеж = require('../models/Payment');
+const { проверитьРоль } = require('../middleware/auth');
 
-const router = express.Router();
+const маршрутизатор = express.Router();
 
-// Dashboard summary data
-router.get('/dashboard-summary', checkRole(['admin', 'teacher']), async (req, res) => {
+// Сводные данные для панели управления
+маршрутизатор.get('/dashboard-summary', проверитьРоль(['admin', 'teacher']), async (запрос, ответ) => {
   try {
-    const studentCount = await Student.countDocuments();
-    const teacherCount = await Teacher.countDocuments();
-    const groupCount = await Group.countDocuments();
+    const количествоСтудентов = await Студент.countDocuments();
+    const количествоУчителей = await Учитель.countDocuments();
+    const количествоГрупп = await Группа.countDocuments();
 
-    // Attendance summary for the current month
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    // Сводка по посещаемости за текущий месяц
+    const сейчас = new Date();
+    const началоМесяца = new Date(сейчас.getFullYear(), сейчас.getMonth(), 1);
+    const конецМесяца = new Date(сейчас.getFullYear(), сейчас.getMonth() + 1, 0, 23, 59, 59, 999);
 
-    const attendanceSummary = await Attendance.aggregate([
+    const сводкаПосещаемости = await Посещаемость.aggregate([
       {
         $match: {
           date: {
-            $gte: startOfMonth,
-            $lte: endOfMonth
+            $gte: началоМесяца,
+            $lte: конецМесяца
           }
         }
       },
@@ -37,27 +37,27 @@ router.get('/dashboard-summary', checkRole(['admin', 'teacher']), async (req, re
       }
     ]);
 
-    const attendanceData = {
-      present: 0,
-      absent: 0,
-      late: 0
+    const данныеПосещаемости = {
+      присутствует: 0,
+      отсутствует: 0,
+      опоздал: 0
     };
 
-    attendanceSummary.forEach(item => {
-      if (item._id === 'present') attendanceData.present = item.count;
-      if (item._id === 'absent') attendanceData.absent = item.count;
-      if (item._id === 'late') attendanceData.late = item.count;
+    сводкаПосещаемости.forEach(элемент => {
+      if (элемент._id === 'present') данныеПосещаемости.присутствует = элемент.count;
+      if (элемент._id === 'absent') данныеПосещаемости.отсутствует = элемент.count;
+      if (элемент._id === 'late') данныеПосещаемости.опоздал = элемент.count;
     });
 
-    // Payment summary for the current month (Admin only)
-    let paymentData = { total: 0, confirmed: 0 };
-    if (req.user.role === 'admin') {
-      const paymentSummary = await Payment.aggregate([
+    // Сводка по платежам за текущий месяц (только для администратора)
+    let данныеПлатежей = { всего: 0, подтверждено: 0 };
+    if (запрос.user.role === 'admin') {
+      const сводкаПлатежей = await Платеж.aggregate([
         {
           $match: {
             paymentDate: {
-              $gte: startOfMonth,
-              $lte: endOfMonth
+              $gte: началоМесяца,
+              $lte: конецМесяца
             }
           }
         },
@@ -70,65 +70,65 @@ router.get('/dashboard-summary', checkRole(['admin', 'teacher']), async (req, re
         }
       ]);
 
-      paymentData = {
-        total: paymentSummary.length > 0 ? paymentSummary[0].totalAmount : 0,
-        confirmed: paymentSummary.length > 0 ? paymentSummary[0].confirmedAmount : 0
+      данныеПлатежей = {
+        всего: сводкаПлатежей.length > 0 ? сводкаПлатежей[0].totalAmount : 0,
+        подтверждено: сводкаПлатежей.length > 0 ? сводкаПлатежей[0].confirmedAmount : 0
       };
     }
 
-    res.json({
-      students: studentCount,
-      teachers: req.user.role === 'admin' ? teacherCount : 0,
-      groups: groupCount,
-      attendance: attendanceData,
-      payments: paymentData
+    ответ.json({
+      студенты: количествоСтудентов,
+      учителя: запрос.user.role === 'admin' ? количествоУчителей : 0,
+      группы: количествоГрупп,
+      посещаемость: данныеПосещаемости,
+      платежи: данныеПлатежей
     });
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching dashboard summary', error: err.message });
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при получении сводки для панели управления', ошибка: ошибка.message });
   }
 });
 
-// Recent activities for dashboard
-router.get('/recent-activities', checkRole(['admin', 'teacher']), async (req, res) => {
+// Недавние активности для панели управления
+маршрутизатор.get('/recent-activities', проверитьРоль(['admin', 'teacher']), async (запрос, ответ) => {
   try {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
+    const сейчас = new Date();
+    const семьДнейНазад = new Date(сейчас.setDate(сейчас.getDate() - 7));
 
-    const recentAttendance = await Attendance.find({
-      date: { $gte: sevenDaysAgo }
+    const недавняяПосещаемость = await Посещаемость.find({
+      date: { $gte: семьДнейНазад }
     })
     .populate('student group')
     .sort({ date: -1 })
     .limit(5);
 
-    let recentPayments = [];
-    if (req.user.role === 'admin') {
-      recentPayments = await Payment.find({
-        paymentDate: { $gte: sevenDaysAgo }
+    let недавниеПлатежи = [];
+    if (запрос.user.role === 'admin') {
+      недавниеПлатежи = await Платеж.find({
+        paymentDate: { $gte: семьДнейНазад }
       })
       .populate('student group')
       .sort({ paymentDate: -1 })
       .limit(5);
     }
 
-    const activities = [
-      ...recentAttendance.map(att => ({
-        type: 'attendance',
-        description: `${att.student.firstName} ${att.student.lastName} marked as ${att.status} in group ${att.group.name}`,
-        date: att.date
+    const активности = [
+      ...недавняяПосещаемость.map(посещ => ({
+        тип: 'посещаемость',
+        описание: `${посещ.student.firstName} ${посещ.student.lastName} отмечен как ${посещ.status} в группе ${посещ.group.name}`,
+        дата: посещ.date
       })),
-      ...recentPayments.map(pay => ({
-        type: 'payment',
-        description: `${pay.student.firstName} ${pay.student.lastName} paid ${pay.amount} for group ${pay.group.name}`,
-        date: pay.paymentDate
+      ...недавниеПлатежи.map(плат => ({
+        тип: 'платеж',
+        описание: `${плат.student.firstName} ${плат.student.lastName} заплатил ${плат.amount} за группу ${плат.group.name}`,
+        дата: плат.paymentDate
       }))]
-    .sort((a, b) => b.date - a.date)
+    .sort((а, б) => б.дата - а.дата)
     .slice(0, 5);
 
-    res.json(activities);
-  } catch (err) {
-    res.status(500).json({ message: 'Error fetching recent activities', error: err.message });
+    ответ.json(активности);
+  } catch (ошибка) {
+    ответ.status(500).json({ сообщение: 'Ошибка при получении недавних активностей', ошибка: ошибка.message });
   }
 });
 
-module.exports = router;
+module.exports = маршрутизатор;

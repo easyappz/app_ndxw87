@@ -3,22 +3,22 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-const User = require('./models/User');
+const Пользователь = require('./models/User');
 
-const apiRoutes = require('./apiRoutes');
+const apiМаршруты = require('./apiRoutes');
 
-// Initialize Express app
-const app = express();
+// Инициализация приложения Express
+const приложение = express();
 
 // Middleware
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+приложение.use(cors());
+приложение.use(bodyParser.json());
+приложение.use(bodyParser.urlencoded({ extended: true }));
 
-// API Routes
-app.use('/api', apiRoutes);
+// API маршруты
+приложение.use('/api', apiМаршруты);
 
-// MongoDB Connection
+// Подключение к MongoDB
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI, {
@@ -26,48 +26,48 @@ mongoose.connect(MONGO_URI, {
   useUnifiedTopology: true
 })
 .then(async () => {
-  console.log('MongoDB connected successfully');
-  await seedAdminUser();
+  console.log('MongoDB успешно подключен');
+  await создатьАдмина();
 })
-.catch((err) => {
-  console.error('MongoDB connection error:', err);
+.catch((ошибка) => {
+  console.error('Ошибка подключения к MongoDB:', ошибка);
 });
 
-// Function to seed admin user
-const seedAdminUser = async () => {
+// Функция для создания пользователя-администратора
+const создатьАдмина = async () => {
   try {
-    const adminEmail = 'ilez2017@mail.ru';
-    const adminPassword = '123123123';
-    const existingAdmin = await User.findOne({ email: adminEmail });
-    if (!existingAdmin) {
-      const hashedPassword = await bcrypt.hash(adminPassword, 10);
-      const adminUser = new User({
-        email: adminEmail,
-        password: hashedPassword,
-        firstName: 'Admin',
-        lastName: 'User',
+    const админПочта = 'ilez2017@mail.ru';
+    const админПароль = '123123123';
+    const существующийАдмин = await Пользователь.findOne({ email: админПочта });
+    if (!существующийАдмин) {
+      const зашифрованныйПароль = await bcrypt.hash(админПароль, 10);
+      const админПользователь = new Пользователь({
+        email: админПочта,
+        password: зашифрованныйПароль,
+        firstName: 'Админ',
+        lastName: 'Пользователь',
         role: 'admin'
       });
-      await adminUser.save();
-      console.log('Admin user created successfully');
+      await админПользователь.save();
+      console.log('Пользователь-администратор успешно создан');
     } else {
-      console.log('Admin user already exists');
+      console.log('Пользователь-администратор уже существует');
     }
-  } catch (error) {
-    console.error('Error seeding admin user:', error.message);
+  } catch (ошибка) {
+    console.error('Ошибка при создании администратора:', ошибка.message);
   }
 };
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
+// Middleware для обработки ошибок
+приложение.use((ошибка, запрос, ответ, следующий) => {
+  console.error(ошибка.stack);
+  ответ.status(500).json({ сообщение: 'Что-то пошло не так!' });
 });
 
-// Start the server
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+// Запуск сервера
+const ПОРТ = process.env.PORT || 5000;
+приложение.listen(ПОРТ, () => {
+  console.log(`Сервер запущен на порту ${ПОРТ}`);
 });
 
-module.exports = app;
+module.exports = приложение;

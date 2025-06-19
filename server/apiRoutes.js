@@ -53,6 +53,30 @@ router.delete('/classrooms/:id', async (req, res) => {
   }
 });
 
+// Get Classroom Schedule by Day/Week/Month
+router.get('/classrooms/:id/schedule', async (req, res) => {
+  try {
+    const { view } = req.query; // 'day', 'week', 'month'
+    const classroom = await Classroom.findById(req.params.id);
+    if (!classroom) {
+      return res.status(404).json({ message: 'Classroom not found' });
+    }
+    let scheduleData = {};
+    if (view === 'day') {
+      scheduleData = classroom.schedule.days;
+    } else if (view === 'week') {
+      scheduleData = classroom.schedule.weeks;
+    } else if (view === 'month') {
+      scheduleData = classroom.schedule.months;
+    } else {
+      scheduleData = classroom.schedule;
+    }
+    res.json(scheduleData);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching classroom schedule', error: err.message });
+  }
+});
+
 // Teacher Routes
 router.get('/teachers', async (req, res) => {
   try {
@@ -94,6 +118,35 @@ router.delete('/teachers/:id', async (req, res) => {
     res.json({ message: 'Teacher deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Error deleting teacher', error: err.message });
+  }
+});
+
+// Get Teacher Groups from Journal
+router.get('/teachers/:id/groups', async (req, res) => {
+  try {
+    const teacher = await Teacher.findById(req.params.id).populate('journal.group');
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    const groups = teacher.journal.map(entry => entry.group);
+    res.json(groups);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching teacher groups', error: err.message });
+  }
+});
+
+// Add Group to Teacher Journal
+router.post('/teachers/:id/journal', async (req, res) => {
+  try {
+    const teacher = await Teacher.findById(req.params.id);
+    if (!teacher) {
+      return res.status(404).json({ message: 'Teacher not found' });
+    }
+    teacher.journal.push(req.body);
+    await teacher.save();
+    res.status(201).json(teacher.journal);
+  } catch (err) {
+    res.status(400).json({ message: 'Error adding to teacher journal', error: err.message });
   }
 });
 
@@ -141,6 +194,32 @@ router.delete('/groups/:id', async (req, res) => {
   }
 });
 
+// Get Group Schedule
+router.get('/groups/:id/schedule', async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id).populate('schedule.classroom');
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    res.json(group.schedule);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching group schedule', error: err.message });
+  }
+});
+
+// Get Group Attendance Report
+router.get('/groups/:id/attendance-report', async (req, res) => {
+  try {
+    const group = await Group.findById(req.params.id).populate('attendance.studentAttendance.student');
+    if (!group) {
+      return res.status(404).json({ message: 'Group not found' });
+    }
+    res.json(group.attendance);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching group attendance report', error: err.message });
+  }
+});
+
 // Student Routes
 router.get('/students', async (req, res) => {
   try {
@@ -182,6 +261,34 @@ router.delete('/students/:id', async (req, res) => {
     res.json({ message: 'Student deleted' });
   } catch (err) {
     res.status(500).json({ message: 'Error deleting student', error: err.message });
+  }
+});
+
+// Get Student Payment Status
+router.get('/students/:id/payment-status', async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id).populate('paymentStatus.group');
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    res.json(student.paymentStatus);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching student payment status', error: err.message });
+  }
+});
+
+// Update Student Payment Status
+router.post('/students/:id/payment-status', async (req, res) => {
+  try {
+    const student = await Student.findById(req.params.id);
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    student.paymentStatus.push(req.body);
+    await student.save();
+    res.status(201).json(student.paymentStatus);
+  } catch (err) {
+    res.status(400).json({ message: 'Error updating student payment status', error: err.message });
   }
 });
 
@@ -273,6 +380,23 @@ router.delete('/attendances/:id', async (req, res) => {
   }
 });
 
+// Get Attendance by Date for Highlighting Lesson Days
+router.get('/attendances/dates', async (req, res) => {
+  try {
+    const { studentId, groupId, startDate, endDate } = req.query;
+    const query = {};
+    if (studentId) query.student = studentId;
+    if (groupId) query.group = groupId;
+    if (startDate && endDate) {
+      query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
+    }
+    const attendances = await Attendance.find(query).select('date status');
+    res.json(attendances);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching attendance dates', error: err.message });
+  }
+});
+
 // Payment Routes
 router.get('/payments', async (req, res) => {
   try {
@@ -317,16 +441,27 @@ router.delete('/payments/:id', async (req, res) => {
   }
 });
 
-// Confirm Payment
+// Confirm Payment for Cycle (8 Lessons)
 router.post('/payments/:id/confirm', async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(
       req.params.id, 
       { confirmed: true }, 
       { new: true }
-    );
+    ).populate('student group');
     if (!payment) {
       return res.status(404).json({ message: 'Payment not found' });
+    }
+    // Update student payment status
+    const student = await Student.findById(payment.student._id);
+    const paymentStatusIndex = student.paymentStatus.findIndex(
+      status => status.group.toString() === payment.group._id.toString() 
+        && status.cycleStartDate.getTime() === payment.cycleStartDate.getTime()
+    );
+    if (paymentStatusIndex !== -1) {
+      student.paymentStatus[paymentStatusIndex].confirmed = true;
+      student.paymentStatus[paymentStatusIndex].amountPaid = payment.amount;
+      await student.save();
     }
     res.json(payment);
   } catch (err) {

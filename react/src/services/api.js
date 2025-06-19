@@ -252,6 +252,27 @@ const getRecentActivities = async () => {
   return response.data;
 };
 
+// Access Control
+const getUsers = async () => {
+  const response = await axios.get(`${API_URL}api/access/users`);
+  return response.data;
+};
+
+const updateUserRole = async (id, role) => {
+  const response = await axios.put(`${API_URL}api/access/users/${id}/role`, { role });
+  return response.data;
+};
+
+const updateUserPermissions = async (id, permissions) => {
+  const response = await axios.put(`${API_URL}api/access/users/${id}/permissions`, { permissions });
+  return response.data;
+};
+
+const updateUserReference = async (id, referenceId, referenceModel) => {
+  const response = await axios.put(`${API_URL}api/access/users/${id}/reference`, { referenceId, referenceModel });
+  return response.data;
+};
+
 export default {
   getClassrooms,
   createClassroom,
@@ -291,5 +312,9 @@ export default {
   getAttendanceReport,
   getPaymentReport,
   getDashboardSummary,
-  getRecentActivities
+  getRecentActivities,
+  getUsers,
+  updateUserRole,
+  updateUserPermissions,
+  updateUserReference
 };

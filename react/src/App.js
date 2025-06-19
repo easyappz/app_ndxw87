@@ -16,6 +16,7 @@ import AddStudent from './pages/AddStudent';
 import Schedule from './pages/Schedule';
 import Attendance from './pages/Attendance';
 import Finances from './pages/Finances';
+import AccessControl from './pages/AccessControl';
 
 const theme = createTheme({
   palette: {
@@ -70,6 +71,7 @@ function App() {
             <Route path="schedule" element={<Schedule />} />
             <Route path="attendance" element={<Attendance />} />
             <Route path="finances" element={<Finances />} />
+            <Route path="access-control" element={<AccessControl />} />
           </Route>
         </Routes>
       </ThemeProvider>

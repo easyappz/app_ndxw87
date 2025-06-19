@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, Link } from 'react-router-dom';
 import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Container, IconButton, Divider } from '@mui/material';
-import { Dashboard as DashboardIcon, MeetingRoom as MeetingRoomIcon, Person as PersonIcon, Group as GroupIcon, School as SchoolIcon, CalendarToday as CalendarTodayIcon, CheckCircle as CheckCircleIcon, AttachMoney as AttachMoneyIcon } from '@mui/icons-material';
+import { Dashboard as DashboardIcon, MeetingRoom as MeetingRoomIcon, Person as PersonIcon, Group as GroupIcon, School as SchoolIcon, CalendarToday as CalendarTodayIcon, CheckCircle as CheckCircleIcon, AttachMoney as AttachMoneyIcon, Security as SecurityIcon } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
 
 const drawerWidth = 240;
@@ -15,6 +15,7 @@ const menuItems = [
   { text: 'Расписание', icon: <CalendarTodayIcon />, path: '/schedule' },
   { text: 'Посещаемость', icon: <CheckCircleIcon />, path: '/attendance' },
   { text: 'Финансы', icon: <AttachMoneyIcon />, path: '/finances' },
+  { text: 'Управление доступом', icon: <SecurityIcon />, path: '/access-control' }
 ];
 
 function Layout() {
@@ -53,8 +54,8 @@ function Layout() {
         position="fixed" 
         sx={{ 
           zIndex: (theme) => theme.zIndex.drawer + 1,
-          backgroundColor: '#1976d2', // Changed header color to blue to match the primary theme color
-          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)' // Adding subtle shadow for depth
+          backgroundColor: '#1976d2',
+          boxShadow: '0px 2px 4px -1px rgba(0,0,0,0.2), 0px 4px 5px 0px rgba(0,0,0,0.14), 0px 1px 10px 0px rgba(0,0,0,0.12)'
         }}
       >
         <Toolbar>

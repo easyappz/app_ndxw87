@@ -6,6 +6,20 @@ import axios from 'axios';
 
 const API_URL = '/';
 
+const translations = {
+  title: 'Регистрация',
+  firstName: 'Имя',
+  lastName: 'Фамилия',
+  email: 'Электронная почта',
+  password: 'Пароль',
+  role: 'Роль',
+  student: 'Ученик',
+  teacher: 'Учитель',
+  registerButton: 'Зарегистрироваться',
+  alreadyHaveAccount: 'Уже есть аккаунт? Войти',
+  errorMessage: 'Регистрация не удалась. Пожалуйста, проверьте введенные данные и попробуйте снова.'
+};
+
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -32,7 +46,7 @@ const Register = () => {
       setLoading(false);
       navigate('/login');
     } catch (err) {
-      setError('Registration failed. Please check your details and try again.');
+      setError(translations.errorMessage);
       setLoading(false);
       console.error(err);
     }
@@ -48,7 +62,7 @@ const Register = () => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', mb: 4 }}>
           <PersonAddIcon color="primary" fontSize="large" />
           <Typography component="h1" variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>
-            Register
+            {translations.title}
           </Typography>
         </Box>
         {error && (
@@ -61,7 +75,7 @@ const Register = () => {
             margin="normal"
             required
             fullWidth
-            label="First Name"
+            label={translations.firstName}
             name="firstName"
             autoFocus
             value={firstName}
@@ -71,7 +85,7 @@ const Register = () => {
             margin="normal"
             required
             fullWidth
-            label="Last Name"
+            label={translations.lastName}
             name="lastName"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
@@ -80,7 +94,7 @@ const Register = () => {
             margin="normal"
             required
             fullWidth
-            label="Email Address"
+            label={translations.email}
             name="email"
             autoComplete="email"
             value={email}
@@ -91,23 +105,23 @@ const Register = () => {
             required
             fullWidth
             name="password"
-            label="Password"
+            label={translations.password}
             type="password"
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <FormControl fullWidth margin="normal">
-            <InputLabel id="role-select-label">Role</InputLabel>
+            <InputLabel id="role-select-label">{translations.role}</InputLabel>
             <Select
               labelId="role-select-label"
               id="role-select"
               value={role}
-              label="Role"
+              label={translations.role}
               onChange={handleRoleChange}
             >
-              <MenuItem value="student">Student</MenuItem>
-              <MenuItem value="teacher">Teacher</MenuItem>
+              <MenuItem value="student">{translations.student}</MenuItem>
+              <MenuItem value="teacher">{translations.teacher}</MenuItem>
             </Select>
           </FormControl>
           <Button
@@ -118,7 +132,7 @@ const Register = () => {
             sx={{ mt: 3, mb: 2 }}
             disabled={loading}
           >
-            {loading ? <CircularProgress size={24} /> : 'Register'}
+            {loading ? <CircularProgress size={24} /> : translations.registerButton}
           </Button>
           <Button
             fullWidth
@@ -128,7 +142,7 @@ const Register = () => {
             onClick={() => navigate('/login')}
             disabled={loading}
           >
-            Already have an account? Sign In
+            {translations.alreadyHaveAccount}
           </Button>
         </form>
       </Paper>

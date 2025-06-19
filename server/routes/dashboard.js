@@ -4,11 +4,12 @@ const Teacher = require('../models/Teacher');
 const Group = require('../models/Group');
 const Attendance = require('../models/Attendance');
 const Payment = require('../models/Payment');
+const { checkRole } = require('../middleware/auth');
 
 const router = express.Router();
 
 // Dashboard summary data
-router.get('/dashboard-summary', async (req, res) => {
+router.get('/dashboard-summary', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const studentCount = await Student.countDocuments();
     const teacherCount = await Teacher.countDocuments();
@@ -48,33 +49,36 @@ router.get('/dashboard-summary', async (req, res) => {
       if (item._id === 'late') attendanceData.late = item.count;
     });
 
-    // Payment summary for the current month
-    const paymentSummary = await Payment.aggregate([
-      {
-        $match: {
-          paymentDate: {
-            $gte: startOfMonth,
-            $lte: endOfMonth
+    // Payment summary for the current month (Admin only)
+    let paymentData = { total: 0, confirmed: 0 };
+    if (req.user.role === 'admin') {
+      const paymentSummary = await Payment.aggregate([
+        {
+          $match: {
+            paymentDate: {
+              $gte: startOfMonth,
+              $lte: endOfMonth
+            }
+          }
+        },
+        {
+          $group: {
+            _id: null,
+            totalAmount: { $sum: '$amount' },
+            confirmedAmount: { $sum: { $cond: ['$confirmed', '$amount', 0] } }
           }
         }
-      },
-      {
-        $group: {
-          _id: null,
-          totalAmount: { $sum: '$amount' },
-          confirmedAmount: { $sum: { $cond: ['$confirmed', '$amount', 0] } }
-        }
-      }
-    ]);
+      ]);
 
-    const paymentData = {
-      total: paymentSummary.length > 0 ? paymentSummary[0].totalAmount : 0,
-      confirmed: paymentSummary.length > 0 ? paymentSummary[0].confirmedAmount : 0
-    };
+      paymentData = {
+        total: paymentSummary.length > 0 ? paymentSummary[0].totalAmount : 0,
+        confirmed: paymentSummary.length > 0 ? paymentSummary[0].confirmedAmount : 0
+      };
+    }
 
     res.json({
       students: studentCount,
-      teachers: teacherCount,
+      teachers: req.user.role === 'admin' ? teacherCount : 0,
       groups: groupCount,
       attendance: attendanceData,
       payments: paymentData
@@ -85,7 +89,7 @@ router.get('/dashboard-summary', async (req, res) => {
 });
 
 // Recent activities for dashboard
-router.get('/recent-activities', async (req, res) => {
+router.get('/recent-activities', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const now = new Date();
     const sevenDaysAgo = new Date(now.setDate(now.getDate() - 7));
@@ -97,12 +101,15 @@ router.get('/recent-activities', async (req, res) => {
     .sort({ date: -1 })
     .limit(5);
 
-    const recentPayments = await Payment.find({
-      paymentDate: { $gte: sevenDaysAgo }
-    })
-    .populate('student group')
-    .sort({ paymentDate: -1 })
-    .limit(5);
+    let recentPayments = [];
+    if (req.user.role === 'admin') {
+      recentPayments = await Payment.find({
+        paymentDate: { $gte: sevenDaysAgo }
+      })
+      .populate('student group')
+      .sort({ paymentDate: -1 })
+      .limit(5);
+    }
 
     const activities = [
       ...recentAttendance.map(att => ({

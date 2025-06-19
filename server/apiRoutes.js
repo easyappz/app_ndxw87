@@ -8,6 +8,7 @@ const Attendance = require('./models/Attendance');
 const Payment = require('./models/Payment');
 const dashboardRoutes = require('./routes/dashboard');
 const authRoutes = require('./routes/auth');
+const accessControlRoutes = require('./routes/accessControl');
 const { authenticateUser, checkPermission, checkRole } = require('./middleware/auth');
 
 const router = express.Router();
@@ -20,6 +21,9 @@ router.use('/auth', authRoutes);
 
 // Apply authentication middleware to all routes below
 router.use(authenticateUser);
+
+// Use access control routes
+router.use('/access', accessControlRoutes);
 
 // Classroom Routes
 router.get('/classrooms', checkRole(['admin']), async (req, res) => {

@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { JWT_SECRET } = require('../middleware/auth');
+const { JWT_SECRET, аутентифицироватьПользователя, проверитьРоль } = require('../middleware/auth');
 
 const router = express.Router();
 
@@ -132,6 +132,39 @@ router.get('/check-admin', async (req, res) => {
   } catch (error) {
     console.error('Ошибка проверки существования администратора:', error.message);
     res.status(500).json({ message: 'Ошибка при проверке существования администратора', error: error.message });
+  }
+});
+
+// Новый маршрут для регистрации администратора (доступен только для существующих администраторов)
+router.post('/register-admin', аутентифицироватьПользователя, проверитьРоль(['admin']), async (req, res) => {
+  try {
+    const { email, password, firstName, lastName } = req.body;
+
+    // Проверка на существование пользователя с таким email
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Пользователь с этим email уже существует' });
+    }
+
+    // Создаем нового администратора
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newAdmin = new User({
+      email,
+      password: hashedPassword,
+      firstName,
+      lastName,
+      role: 'admin',
+      referenceId: null,
+      referenceModel: null,
+      permissions: []
+    });
+
+    await newAdmin.save();
+
+    res.status(201).json({ message: 'Новый администратор успешно зарегистрирован', userId: newAdmin._id });
+  } catch (error) {
+    console.error('Ошибка регистрации нового администратора:', error.message);
+    res.status(500).json({ message: 'Ошибка при регистрации нового администратора', error: error.message });
   }
 });
 

@@ -2,28 +2,40 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Box, ToggleButtonGroup, ToggleButton, Grid, Card, CardContent, List, ListItem, ListItemText } from '@mui/material';
 import { Today as TodayIcon, ViewWeek as ViewWeekIcon, CalendarMonth as CalendarMonthIcon } from '@mui/icons-material';
 import api from '../services/api';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 function Schedule() {
+  const { user } = useContext(AuthContext);
   const [view, setView] = useState('day');
   const [classrooms, setClassrooms] = useState([]);
   const [schedules, setSchedules] = useState([]);
   const [scheduleData, setScheduleData] = useState({});
+  const [filteredSchedules, setFilteredSchedules] = useState([]);
 
   useEffect(() => {
     fetchClassrooms();
     fetchSchedules();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (classrooms.length > 0) {
       fetchScheduleData(view);
     }
-  }, [view, classrooms]);
+  }, [view, classrooms, user]);
+
+  useEffect(() => {
+    filterSchedules();
+  }, [schedules, user]);
 
   const fetchClassrooms = async () => {
     try {
-      const data = await api.getClassrooms();
-      setClassrooms(data);
+      if (user && user.role === 'admin') {
+        const data = await api.getClassrooms();
+        setClassrooms(data);
+      } else {
+        setClassrooms([]); // For non-admin, we'll show schedules directly
+      }
     } catch (error) {
       console.error('Ошибка при загрузке кабинетов:', error);
     }
@@ -33,8 +45,26 @@ function Schedule() {
     try {
       const data = await api.getSchedules();
       setSchedules(data);
+      filterSchedules(data);
     } catch (error) {
       console.error('Ошибка при загрузке расписания:', error);
+    }
+  };
+
+  const filterSchedules = (data = schedules) => {
+    if (user) {
+      if (user.role === 'student') {
+        // Students see schedules for their groups
+        // This is a placeholder until backend provides filtering
+        setFilteredSchedules(data); // Temporary
+      } else if (user.role === 'teacher') {
+        // Teachers see schedules for their groups
+        setFilteredSchedules(data); // Temporary
+      } else {
+        setFilteredSchedules(data); // Admin sees all
+      }
+    } else {
+      setFilteredSchedules([]);
     }
   };
 
@@ -114,47 +144,80 @@ function Schedule() {
       <Typography variant="h4" gutterBottom>
         Расписание
       </Typography>
-      <Box sx={{ mb: 4 }}>
-        <ToggleButtonGroup
-          value={view}
-          exclusive
-          onChange={handleViewChange}
-          aria-label="view schedule"
-        >
-          <ToggleButton value="day" aria-label="day view">
-            <TodayIcon sx={{ mr: 1 }} />
-            День
-          </ToggleButton>
-          <ToggleButton value="week" aria-label="week view">
-            <ViewWeekIcon sx={{ mr: 1 }} />
-            Неделя
-          </ToggleButton>
-          <ToggleButton value="month" aria-label="month view">
-            <CalendarMonthIcon sx={{ mr: 1 }} />
-            Месяц
-          </ToggleButton>
-        </ToggleButtonGroup>
-      </Box>
+      {user && user.role === 'admin' && (
+        <Box sx={{ mb: 4 }}>
+          <ToggleButtonGroup
+            value={view}
+            exclusive
+            onChange={handleViewChange}
+            aria-label="view schedule"
+          >
+            <ToggleButton value="day" aria-label="day view">
+              <TodayIcon sx={{ mr: 1 }} />
+              День
+            </ToggleButton>
+            <ToggleButton value="week" aria-label="week view">
+              <ViewWeekIcon sx={{ mr: 1 }} />
+              Неделя
+            </ToggleButton>
+            <ToggleButton value="month" aria-label="month view">
+              <CalendarMonthIcon sx={{ mr: 1 }} />
+              Месяц
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+      )}
       <Grid container spacing={3}>
-        {classrooms.length > 0 ? (
-          classrooms.map(classroom => (
-            <Grid item xs={12} md={6} key={classroom._id}>
-              <Card>
-                <CardContent>
-                  <Typography variant="h6" gutterBottom>
-                    Кабинет: {classroom.name}
-                  </Typography>
-                  {renderSchedule(classroom._id)}
-                </CardContent>
-              </Card>
+        {user && user.role === 'admin' ? (
+          classrooms.length > 0 ? (
+            classrooms.map(classroom => (
+              <Grid item xs={12} md={6} key={classroom._id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Кабинет: {classroom.name}
+                    </Typography>
+                    {renderSchedule(classroom._id)}
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Typography variant="body1" align="center">
+                Кабинеты не найдены. Расписание недоступно.
+              </Typography>
             </Grid>
-          ))
+          )
         ) : (
-          <Grid item xs={12}>
-            <Typography variant="body1" align="center">
-              Кабинеты не найдены. Расписание недоступно.
-            </Typography>
-          </Grid>
+          filteredSchedules.length > 0 ? (
+            filteredSchedules.map(schedule => (
+              <Grid item xs={12} md={6} key={schedule._id}>
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Группа: {schedule.group ? schedule.group.name : 'Не указана'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Кабинет: {schedule.classroom ? schedule.classroom.name : 'Не указан'}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Время: {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      День: {schedule.dayOfWeek || 'Не указан'}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ))
+          ) : (
+            <Grid item xs={12}>
+              <Typography variant="body1" align="center">
+                Расписание не найдено.
+              </Typography>
+            </Grid>
+          )
         )}
       </Grid>
     </Box>

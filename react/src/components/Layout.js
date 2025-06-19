@@ -1,29 +1,39 @@
 import React from 'react';
-import { Outlet, Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Container, IconButton, Divider } from '@mui/material';
-import { Dashboard as DashboardIcon, MeetingRoom as MeetingRoomIcon, Person as PersonIcon, Group as GroupIcon, School as SchoolIcon, CalendarToday as CalendarTodayIcon, CheckCircle as CheckCircleIcon, AttachMoney as AttachMoneyIcon, Security as SecurityIcon } from '@mui/icons-material';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
+import { AppBar, Toolbar, Typography, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, Box, Container, IconButton, Divider, Button } from '@mui/material';
+import { Dashboard as DashboardIcon, MeetingRoom as MeetingRoomIcon, Person as PersonIcon, Group as GroupIcon, School as SchoolIcon, CalendarToday as CalendarTodayIcon, CheckCircle as CheckCircleIcon, AttachMoney as AttachMoneyIcon, Security as SecurityIcon, Logout as LogoutIcon } from '@mui/icons-material';
 import MenuIcon from '@mui/icons-material/Menu';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 const drawerWidth = 240;
 
-const menuItems = [
-  { text: 'Дашборд', icon: <DashboardIcon />, path: '/' },
-  { text: 'Кабинеты', icon: <MeetingRoomIcon />, path: '/classrooms' },
-  { text: 'Преподаватели', icon: <PersonIcon />, path: '/teachers' },
-  { text: 'Группы', icon: <GroupIcon />, path: '/groups' },
-  { text: 'Ученики', icon: <SchoolIcon />, path: '/students' },
-  { text: 'Расписание', icon: <CalendarTodayIcon />, path: '/schedule' },
-  { text: 'Посещаемость', icon: <CheckCircleIcon />, path: '/attendance' },
-  { text: 'Финансы', icon: <AttachMoneyIcon />, path: '/finances' },
-  { text: 'Управление доступом', icon: <SecurityIcon />, path: '/access-control' }
-];
-
 function Layout() {
+  const { user, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  // Define menu items based on user role
+  const menuItems = user ? [
+    { text: 'Дашборд', icon: <DashboardIcon />, path: '/', roles: ['admin', 'teacher', 'student'] },
+    { text: 'Кабинеты', icon: <MeetingRoomIcon />, path: '/classrooms', roles: ['admin'] },
+    { text: 'Преподаватели', icon: <PersonIcon />, path: '/teachers', roles: ['admin'] },
+    { text: 'Группы', icon: <GroupIcon />, path: '/groups', roles: ['admin', 'teacher'] },
+    { text: 'Ученики', icon: <SchoolIcon />, path: '/students', roles: ['admin', 'teacher'] },
+    { text: 'Расписание', icon: <CalendarTodayIcon />, path: '/schedule', roles: ['admin', 'teacher', 'student'] },
+    { text: 'Посещаемость', icon: <CheckCircleIcon />, path: '/attendance', roles: ['admin', 'teacher'] },
+    { text: 'Финансы', icon: <AttachMoneyIcon />, path: '/finances', roles: ['admin'] },
+    { text: 'Управление доступом', icon: <SecurityIcon />, path: '/access-control', roles: ['admin'] }
+  ].filter(item => item.roles.includes(user.role)) : [];
 
   const drawer = (
     <div>
@@ -68,9 +78,24 @@ function Layout() {
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ color: '#ffffff' }}>
+          <Typography variant="h6" noWrap component="div" sx={{ color: '#ffffff', flexGrow: 1 }}>
             Prof-IT - Управление школой
           </Typography>
+          {user && (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Typography variant="body2" sx={{ color: '#ffffff' }}>
+                {user.firstName} {user.lastName} ({user.role})
+              </Typography>
+              <Button
+                color="inherit"
+                startIcon={<LogoutIcon />}
+                onClick={handleLogout}
+                sx={{ color: '#ffffff' }}
+              >
+                Logout
+              </Button>
+            </Box>
+          )}
         </Toolbar>
       </AppBar>
 

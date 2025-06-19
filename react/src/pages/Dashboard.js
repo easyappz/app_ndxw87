@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Typography, Box, Card, CardContent, CardHeader, Grid, Divider, List, ListItem, ListItemText, CircularProgress, Alert } from '@mui/material';
 import { People as PeopleIcon, Class as ClassIcon, Room as RoomIcon, MonetizationOn as MonetizationOnIcon, Event as EventIcon } from '@mui/icons-material';
 import api from '../services/api';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 function StatCard({ title, value, icon, color }) {
   return (
@@ -21,7 +23,7 @@ function StatCard({ title, value, icon, color }) {
   );
 }
 
-function ActivityList({ activities, loading, error }) {
+function ActivityList({ activities, loading, error, role }) {
   if (loading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
@@ -64,6 +66,7 @@ function ActivityList({ activities, loading, error }) {
 }
 
 function Dashboard() {
+  const { user } = useContext(AuthContext);
   const [summary, setSummary] = useState({
     students: 0,
     teachers: 0,
@@ -107,8 +110,13 @@ function Dashboard() {
     };
 
     fetchSummary();
-    fetchActivities();
-  }, []);
+    if (user && user.role !== 'student') {
+      fetchActivities();
+    } else {
+      setLoadingActivities(false);
+      setErrorActivities('Access to activities is restricted for students.');
+    }
+  }, [user]);
 
   return (
     <Box sx={{ p: 3, backgroundColor: '#f5f5f5', minHeight: '100vh' }}>
@@ -132,67 +140,73 @@ function Dashboard() {
             <Grid item xs={12} sm={6} md={3}>
               <StatCard title="Учеников" value={summary.students} icon={<PeopleIcon fontSize="large" />} color="#1976d2" />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="Учителей" value={summary.teachers} icon={<PeopleIcon fontSize="large" />} color="#ff4081" />
-            </Grid>
+            {user && user.role === 'admin' && (
+              <Grid item xs={12} sm={6} md={3}>
+                <StatCard title="Учителей" value={summary.teachers} icon={<PeopleIcon fontSize="large" />} color="#ff4081" />
+              </Grid>
+            )}
             <Grid item xs={12} sm={6} md={3}>
               <StatCard title="Групп" value={summary.groups} icon={<ClassIcon fontSize="large" />} color="#4caf50" />
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <StatCard title="Доход (подтвержденный)" value={`${summary.payments.confirmed} ₽`} icon={<MonetizationOnIcon fontSize="large" />} color="#ff9800" />
-            </Grid>
+            {user && user.role === 'admin' && (
+              <Grid item xs={12} sm={6} md={3}>
+                <StatCard title="Доход (подтвержденный)" value={`${summary.payments.confirmed} ₽`} icon={<MonetizationOnIcon fontSize="large" />} color="#ff9800" />
+              </Grid>
+            )}
           </Grid>
         )}
       </Box>
-      <Box sx={{ mt: 6 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-              <CardHeader
-                title="Последние события"
-                avatar={<EventIcon sx={{ color: '#1976d2' }} />}
-                titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
-              />
-              <CardContent sx={{ p: 0 }}>
-                <ActivityList activities={activities} loading={loadingActivities} error={errorActivities} />
-              </CardContent>
-            </Card>
+      {user && user.role !== 'student' && (
+        <Box sx={{ mt: 6 }}>
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+                <CardHeader
+                  title="Последние события"
+                  avatar={<EventIcon sx={{ color: '#1976d2' }} />}
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+                />
+                <CardContent sx={{ p: 0 }}>
+                  <ActivityList activities={activities} loading={loadingActivities} error={errorActivities} role={user.role} />
+                </CardContent>
+              </Card>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Card sx={{ height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
+                <CardHeader
+                  title="Статистика посещаемости (месяц)"
+                  avatar={<EventIcon sx={{ color: '#4caf50' }} />}
+                  titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
+                />
+                <CardContent>
+                  {loadingSummary ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
+                      <CircularProgress size={24} />
+                    </Box>
+                  ) : errorSummary ? (
+                    <Alert severity="error">{errorSummary}</Alert>
+                  ) : (
+                    <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '100%' }}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" color="green">{summary.attendance.present}</Typography>
+                        <Typography variant="body2" color="text.secondary">Присутствовали</Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" color="red">{summary.attendance.absent}</Typography>
+                        <Typography variant="body2" color="text.secondary">Отсутствовали</Typography>
+                      </Box>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <Typography variant="h6" color="orange">{summary.attendance.late}</Typography>
+                        <Typography variant="body2" color="text.secondary">Опоздали</Typography>
+                      </Box>
+                    </Box>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Card sx={{ height: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.1)' }}>
-              <CardHeader
-                title="Статистика посещаемости (месяц)"
-                avatar={<EventIcon sx={{ color: '#4caf50' }} />}
-                titleTypographyProps={{ variant: 'h6', fontWeight: 'bold' }}
-              />
-              <CardContent>
-                {loadingSummary ? (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : errorSummary ? (
-                  <Alert severity="error">{errorSummary}</Alert>
-                ) : (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center', height: '100%' }}>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" color="green">{summary.attendance.present}</Typography>
-                      <Typography variant="body2" color="text.secondary">Присутствовали</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" color="red">{summary.attendance.absent}</Typography>
-                      <Typography variant="body2" color="text.secondary">Отсутствовали</Typography>
-                    </Box>
-                    <Box sx={{ textAlign: 'center' }}>
-                      <Typography variant="h6" color="orange">{summary.attendance.late}</Typography>
-                      <Typography variant="body2" color="text.secondary">Опоздали</Typography>
-                    </Box>
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </Box>
+        </Box>
+      )}
     </Box>
   );
 }

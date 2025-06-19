@@ -6,8 +6,11 @@ import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
 import api from '../services/api';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 function Attendance() {
+  const { user } = useContext(AuthContext);
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
   const [students, setStudents] = useState([]);
@@ -18,7 +21,7 @@ function Attendance() {
 
   useEffect(() => {
     fetchGroups();
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (selectedGroup) {
@@ -26,12 +29,18 @@ function Attendance() {
       fetchAttendance(selectedGroup, date);
       fetchHighlightedDates(selectedGroup, currentMonth);
     }
-  }, [selectedGroup, date, currentMonth]);
+  }, [selectedGroup, date, currentMonth, user]);
 
   const fetchGroups = async () => {
     try {
       const data = await api.getGroups();
-      setGroups(data);
+      // Filter groups based on user role
+      if (user && user.role === 'teacher') {
+        // Teachers see only their groups - placeholder until backend implements filtering
+        setGroups(data); // Temporary
+      } else {
+        setGroups(data); // Admin sees all
+      }
     } catch (error) {
       console.error('Ошибка при загрузке групп:', error);
     }

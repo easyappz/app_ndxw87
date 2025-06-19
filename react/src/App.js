@@ -17,6 +17,10 @@ import Schedule from './pages/Schedule';
 import Attendance from './pages/Attendance';
 import Finances from './pages/Finances';
 import AccessControl from './pages/AccessControl';
+import Login from './pages/Login';
+import Unauthorized from './pages/Unauthorized';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
 
 const theme = createTheme({
   palette: {
@@ -57,23 +61,118 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <Routes>
-          <Route path="/" element={<Layout />}>
-            <Route index element={<Dashboard />} />
-            <Route path="classrooms" element={<Classrooms />} />
-            <Route path="classrooms/add" element={<AddClassroom />} />
-            <Route path="teachers" element={<Teachers />} />
-            <Route path="teachers/add" element={<AddTeacher />} />
-            <Route path="groups" element={<Groups />} />
-            <Route path="groups/add" element={<AddGroup />} />
-            <Route path="students" element={<Students />} />
-            <Route path="students/add" element={<AddStudent />} />
-            <Route path="schedule" element={<Schedule />} />
-            <Route path="attendance" element={<Attendance />} />
-            <Route path="finances" element={<Finances />} />
-            <Route path="access-control" element={<AccessControl />} />
-          </Route>
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/unauthorized" element={<Unauthorized />} />
+            <Route path="/" element={<Layout />}>
+              <Route 
+                index 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'teacher', 'student']}>
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="classrooms" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Classrooms />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="classrooms/add" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AddClassroom />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="teachers" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Teachers />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="teachers/add" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AddTeacher />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="groups" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'teacher']}>
+                    <Groups />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="groups/add" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AddGroup />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="students" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'teacher']}>
+                    <Students />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="students/add" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AddStudent />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="schedule" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'teacher', 'student']}>
+                    <Schedule />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="attendance" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin', 'teacher']}>
+                    <Attendance />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="finances" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <Finances />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="access-control" 
+                element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <AccessControl />
+                  </ProtectedRoute>
+                } 
+              />
+            </Route>
+          </Routes>
+        </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );

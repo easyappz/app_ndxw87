@@ -6,8 +6,12 @@ const Student = require('./models/Student');
 const Schedule = require('./models/Schedule');
 const Attendance = require('./models/Attendance');
 const Payment = require('./models/Payment');
+const dashboardRoutes = require('./routes/dashboard');
 
 const router = express.Router();
+
+// Use dashboard routes
+router.use('/', dashboardRoutes);
 
 // Classroom Routes
 router.get('/classrooms', async (req, res) => {

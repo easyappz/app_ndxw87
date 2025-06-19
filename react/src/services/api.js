@@ -241,6 +241,17 @@ const getPaymentReport = async (params = {}) => {
   return response.data;
 };
 
+// Dashboard
+const getDashboardSummary = async () => {
+  const response = await axios.get(`${API_URL}api/dashboard-summary`);
+  return response.data;
+};
+
+const getRecentActivities = async () => {
+  const response = await axios.get(`${API_URL}api/recent-activities`);
+  return response.data;
+};
+
 export default {
   getClassrooms,
   createClassroom,
@@ -278,5 +289,7 @@ export default {
   deletePayment,
   confirmPayment,
   getAttendanceReport,
-  getPaymentReport
+  getPaymentReport,
+  getDashboardSummary,
+  getRecentActivities
 };

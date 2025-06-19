@@ -19,6 +19,7 @@ import Finances from './pages/Finances';
 import AccessControl from './pages/AccessControl';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import RegisterAdmin from './pages/RegisterAdmin';
 import Unauthorized from './pages/Unauthorized';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -66,6 +67,7 @@ function App() {
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/register-admin" element={<RegisterAdmin />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/" element={<Layout />}>
               <Route 

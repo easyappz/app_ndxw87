@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, ToggleButtonGroup, ToggleButton, Grid, Card, CardContent, List, ListItem, ListItemText } from '@mui/material';
-import { Day as DayIcon, Week as WeekIcon, Month as MonthIcon } from '@mui/icons-material';
+import { Today as TodayIcon, CalendarWeek as CalendarWeekIcon, CalendarMonth as CalendarMonthIcon } from '@mui/icons-material';
 import api from '../services/api';
 
 function Schedule() {
@@ -122,15 +122,15 @@ function Schedule() {
           aria-label="view schedule"
         >
           <ToggleButton value="day" aria-label="day view">
-            <DayIcon sx={{ mr: 1 }} />
+            <TodayIcon sx={{ mr: 1 }} />
             День
           </ToggleButton>
           <ToggleButton value="week" aria-label="week view">
-            <WeekIcon sx={{ mr: 1 }} />
+            <CalendarWeekIcon sx={{ mr: 1 }} />
             Неделя
           </ToggleButton>
           <ToggleButton value="month" aria-label="month view">
-            <MonthIcon sx={{ mr: 1 }} />
+            <CalendarMonthIcon sx={{ mr: 1 }} />
             Месяц
           </ToggleButton>
         </ToggleButtonGroup>

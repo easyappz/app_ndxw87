@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Button, Grid, Card, CardContent, MenuItem, Select, InputLabel, FormControl, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
+import { DateCalendar, LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
 import api from '../services/api';
 
 function Attendance() {
@@ -9,8 +13,8 @@ function Attendance() {
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
   const [highlightedDates, setHighlightedDates] = useState([]);
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
+  const [date, setDate] = useState(dayjs().format('YYYY-MM-DD'));
+  const [currentMonth, setCurrentMonth] = useState(dayjs().format('YYYY-MM'));
 
   useEffect(() => {
     fetchGroups();
@@ -75,13 +79,13 @@ function Attendance() {
   const fetchHighlightedDates = async (groupId, month) => {
     try {
       const startDate = `${month}-01`;
-      const endDate = new Date(new Date(startDate).setMonth(new Date(startDate).getMonth() + 1)).toISOString().split('T')[0].slice(0, 10);
+      const endDate = dayjs(startDate).add(1, 'month').format('YYYY-MM-DD');
       const data = await api.getAttendanceDates({
         groupId,
         startDate,
         endDate
       });
-      const dates = data.map(record => new Date(record.date).toISOString().split('T')[0]);
+      const dates = data.map(record => dayjs(record.date).format('YYYY-MM-DD'));
       setHighlightedDates(dates);
     } catch (error) {
       console.error('Ошибка при загрузке дат для подсветки:', error);
@@ -115,10 +119,19 @@ function Attendance() {
     }
   };
 
-  const handleDateChange = (e) => {
-    const newDate = e.target.value;
-    setDate(newDate);
-    setCurrentMonth(newDate.slice(0, 7));
+  const handleDateChange = (newDate) => {
+    const formattedDate = newDate.format('YYYY-MM-DD');
+    setDate(formattedDate);
+    setCurrentMonth(newDate.format('YYYY-MM'));
+  };
+
+  const handleMonthChange = (newMonth) => {
+    setCurrentMonth(newMonth.format('YYYY-MM'));
+  };
+
+  const shouldHighlightDate = (day) => {
+    const formattedDay = day.format('YYYY-MM-DD');
+    return highlightedDates.includes(formattedDay);
   };
 
   return (
@@ -141,12 +154,6 @@ function Attendance() {
             ))}
           </Select>
         </FormControl>
-        <input
-          type="date"
-          value={date}
-          onChange={handleDateChange}
-          style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
-        />
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
@@ -160,31 +167,35 @@ function Attendance() {
         <Typography variant="subtitle1" gutterBottom>
           Календарь занятий
         </Typography>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
-          <input
-            type="month"
-            value={currentMonth}
-            onChange={(e) => setCurrentMonth(e.target.value)}
-            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
-          />
-        </Box>
-        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-          {highlightedDates.length > 0 ? (
-            highlightedDates.map((highlightedDate) => (
-              <Button
-                key={highlightedDate}
-                variant={highlightedDate === date ? 'contained' : 'outlined'}
-                onClick={() => setDate(highlightedDate)}
-                sx={{ minWidth: 100 }}
-              >
-                {new Date(highlightedDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
-              </Button>
-            ))
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              Нет данных о занятиях за выбранный месяц.
-            </Typography>
-          )}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="ru">
+            <DateCalendar
+              value={dayjs(date)}
+              onChange={handleDateChange}
+              onMonthChange={handleMonthChange}
+              shouldDisableDate={(day) => !shouldHighlightDate(day) && !day.isSame(dayjs(date), 'day')}
+              slots={{
+                day: ({ day, ...props }) => (
+                  <Button
+                    {...props}
+                    sx={{
+                      backgroundColor: shouldHighlightDate(day) ? '#ff4081' : 'transparent',
+                      color: shouldHighlightDate(day) ? 'white' : 'inherit',
+                      '&:hover': {
+                        backgroundColor: shouldHighlightDate(day) ? '#e6005c' : 'rgba(0, 0, 0, 0.04)',
+                      },
+                      borderRadius: '50%',
+                      width: 36,
+                      height: 36,
+                      minWidth: 36,
+                    }}
+                  >
+                    {day.date()}
+                  </Button>
+                ),
+              }}
+            />
+          </LocalizationProvider>
         </Box>
       </Box>
       <Grid container spacing={3}>

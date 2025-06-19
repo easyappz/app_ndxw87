@@ -232,7 +232,7 @@ router.delete('/schedules/:id', async (req, res) => {
 // Attendance Routes
 router.get('/attendances', async (req, res) => {
   try {
-    const attendances = await Attendance.find().populate('student schedule');
+    const attendances = await Attendance.find().populate('student group schedule');
     res.json(attendances);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching attendances', error: err.message });
@@ -276,7 +276,7 @@ router.delete('/attendances/:id', async (req, res) => {
 // Payment Routes
 router.get('/payments', async (req, res) => {
   try {
-    const payments = await Payment.find().populate('student');
+    const payments = await Payment.find().populate('student group');
     res.json(payments);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching payments', error: err.message });
@@ -337,13 +337,14 @@ router.post('/payments/:id/confirm', async (req, res) => {
 // Attendance Report
 router.get('/reports/attendance', async (req, res) => {
   try {
-    const { studentId, startDate, endDate } = req.query;
+    const { studentId, groupId, startDate, endDate } = req.query;
     const query = {};
     if (studentId) query.student = studentId;
+    if (groupId) query.group = groupId;
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-    const report = await Attendance.find(query).populate('student schedule');
+    const report = await Attendance.find(query).populate('student group schedule');
     res.json(report);
   } catch (err) {
     res.status(500).json({ message: 'Error generating attendance report', error: err.message });
@@ -353,13 +354,14 @@ router.get('/reports/attendance', async (req, res) => {
 // Payment Report
 router.get('/reports/payments', async (req, res) => {
   try {
-    const { studentId, startDate, endDate } = req.query;
+    const { studentId, groupId, startDate, endDate } = req.query;
     const query = {};
     if (studentId) query.student = studentId;
+    if (groupId) query.group = groupId;
     if (startDate && endDate) {
       query.paymentDate = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
-    const report = await Payment.find(query).populate('student');
+    const report = await Payment.find(query).populate('student group');
     res.json(report);
   } catch (err) {
     res.status(500).json({ message: 'Error generating payment report', error: err.message });

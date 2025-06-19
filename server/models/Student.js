@@ -8,6 +8,23 @@ const studentSchema = new mongoose.Schema({
   parentName: { type: String, required: false },
   parentPhone: { type: String, required: false },
   balance: { type: Number, default: 0 },
+  learningData: {
+    groups: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Group' }],
+    progress: [{
+      group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+      date: { type: Date, required: true },
+      note: { type: String, required: false },
+      score: { type: Number, required: false }
+    }]
+  },
+  paymentStatus: [{
+    group: { type: mongoose.Schema.Types.ObjectId, ref: 'Group', required: true },
+    cycleStartDate: { type: Date, required: true },
+    cycleEndDate: { type: Date, required: true },
+    amountDue: { type: Number, required: true },
+    amountPaid: { type: Number, default: 0 },
+    confirmed: { type: Boolean, default: false }
+  }],
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

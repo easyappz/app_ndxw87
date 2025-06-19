@@ -7,14 +7,22 @@ const Schedule = require('./models/Schedule');
 const Attendance = require('./models/Attendance');
 const Payment = require('./models/Payment');
 const dashboardRoutes = require('./routes/dashboard');
+const authRoutes = require('./routes/auth');
+const { authenticateUser, checkPermission, checkRole } = require('./middleware/auth');
 
 const router = express.Router();
 
 // Use dashboard routes
 router.use('/', dashboardRoutes);
 
+// Use auth routes
+router.use('/auth', authRoutes);
+
+// Apply authentication middleware to all routes below
+router.use(authenticateUser);
+
 // Classroom Routes
-router.get('/classrooms', async (req, res) => {
+router.get('/classrooms', checkRole(['admin']), async (req, res) => {
   try {
     const classrooms = await Classroom.find();
     res.json(classrooms);
@@ -23,7 +31,7 @@ router.get('/classrooms', async (req, res) => {
   }
 });
 
-router.post('/classrooms', async (req, res) => {
+router.post('/classrooms', checkRole(['admin']), async (req, res) => {
   try {
     const classroom = new Classroom(req.body);
     await classroom.save();
@@ -33,7 +41,7 @@ router.post('/classrooms', async (req, res) => {
   }
 });
 
-router.put('/classrooms/:id', async (req, res) => {
+router.put('/classrooms/:id', checkRole(['admin']), async (req, res) => {
   try {
     const classroom = await Classroom.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!classroom) {
@@ -45,7 +53,7 @@ router.put('/classrooms/:id', async (req, res) => {
   }
 });
 
-router.delete('/classrooms/:id', async (req, res) => {
+router.delete('/classrooms/:id', checkRole(['admin']), async (req, res) => {
   try {
     const classroom = await Classroom.findByIdAndDelete(req.params.id);
     if (!classroom) {
@@ -58,7 +66,7 @@ router.delete('/classrooms/:id', async (req, res) => {
 });
 
 // Get Classroom Schedule by Day/Week/Month
-router.get('/classrooms/:id/schedule', async (req, res) => {
+router.get('/classrooms/:id/schedule', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const { view } = req.query; // 'day', 'week', 'month'
     const classroom = await Classroom.findById(req.params.id);
@@ -82,7 +90,7 @@ router.get('/classrooms/:id/schedule', async (req, res) => {
 });
 
 // Teacher Routes
-router.get('/teachers', async (req, res) => {
+router.get('/teachers', checkRole(['admin']), async (req, res) => {
   try {
     const teachers = await Teacher.find();
     res.json(teachers);
@@ -91,7 +99,7 @@ router.get('/teachers', async (req, res) => {
   }
 });
 
-router.post('/teachers', async (req, res) => {
+router.post('/teachers', checkRole(['admin']), async (req, res) => {
   try {
     const teacher = new Teacher(req.body);
     await teacher.save();
@@ -101,7 +109,7 @@ router.post('/teachers', async (req, res) => {
   }
 });
 
-router.put('/teachers/:id', async (req, res) => {
+router.put('/teachers/:id', checkRole(['admin']), async (req, res) => {
   try {
     const teacher = await Teacher.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!teacher) {
@@ -113,7 +121,7 @@ router.put('/teachers/:id', async (req, res) => {
   }
 });
 
-router.delete('/teachers/:id', async (req, res) => {
+router.delete('/teachers/:id', checkRole(['admin']), async (req, res) => {
   try {
     const teacher = await Teacher.findByIdAndDelete(req.params.id);
     if (!teacher) {
@@ -126,11 +134,14 @@ router.delete('/teachers/:id', async (req, res) => {
 });
 
 // Get Teacher Groups from Journal
-router.get('/teachers/:id/groups', async (req, res) => {
+router.get('/teachers/:id/groups', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id).populate('journal.group');
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
+    }
+    if (req.user.role === 'teacher' && req.user.referenceId.toString() !== req.params.id) {
+      return res.status(403).json({ message: 'Access denied to other teacher data' });
     }
     const groups = teacher.journal.map(entry => entry.group);
     res.json(groups);
@@ -140,11 +151,14 @@ router.get('/teachers/:id/groups', async (req, res) => {
 });
 
 // Add Group to Teacher Journal
-router.post('/teachers/:id/journal', async (req, res) => {
+router.post('/teachers/:id/journal', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const teacher = await Teacher.findById(req.params.id);
     if (!teacher) {
       return res.status(404).json({ message: 'Teacher not found' });
+    }
+    if (req.user.role === 'teacher' && req.user.referenceId.toString() !== req.params.id) {
+      return res.status(403).json({ message: 'Access denied to other teacher data' });
     }
     teacher.journal.push(req.body);
     await teacher.save();
@@ -155,7 +169,7 @@ router.post('/teachers/:id/journal', async (req, res) => {
 });
 
 // Group Routes
-router.get('/groups', async (req, res) => {
+router.get('/groups', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const groups = await Group.find().populate('teacher students');
     res.json(groups);
@@ -164,7 +178,7 @@ router.get('/groups', async (req, res) => {
   }
 });
 
-router.post('/groups', async (req, res) => {
+router.post('/groups', checkRole(['admin']), async (req, res) => {
   try {
     const group = new Group(req.body);
     await group.save();
@@ -174,7 +188,7 @@ router.post('/groups', async (req, res) => {
   }
 });
 
-router.put('/groups/:id', async (req, res) => {
+router.put('/groups/:id', checkRole(['admin']), async (req, res) => {
   try {
     const group = await Group.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!group) {
@@ -186,7 +200,7 @@ router.put('/groups/:id', async (req, res) => {
   }
 });
 
-router.delete('/groups/:id', async (req, res) => {
+router.delete('/groups/:id', checkRole(['admin']), async (req, res) => {
   try {
     const group = await Group.findByIdAndDelete(req.params.id);
     if (!group) {
@@ -199,11 +213,17 @@ router.delete('/groups/:id', async (req, res) => {
 });
 
 // Get Group Schedule
-router.get('/groups/:id/schedule', async (req, res) => {
+router.get('/groups/:id/schedule', checkRole(['admin', 'teacher', 'student']), async (req, res) => {
   try {
     const group = await Group.findById(req.params.id).populate('schedule.classroom');
     if (!group) {
       return res.status(404).json({ message: 'Group not found' });
+    }
+    if (req.user.role === 'student') {
+      const student = await Student.findById(req.user.referenceId);
+      if (!student.learningData.groups.some(g => g.toString() === req.params.id)) {
+        return res.status(403).json({ message: 'Access denied to this group' });
+      }
     }
     res.json(group.schedule);
   } catch (err) {
@@ -212,7 +232,7 @@ router.get('/groups/:id/schedule', async (req, res) => {
 });
 
 // Get Group Attendance Report
-router.get('/groups/:id/attendance-report', async (req, res) => {
+router.get('/groups/:id/attendance-report', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const group = await Group.findById(req.params.id).populate('attendance.studentAttendance.student');
     if (!group) {
@@ -225,7 +245,7 @@ router.get('/groups/:id/attendance-report', async (req, res) => {
 });
 
 // Student Routes
-router.get('/students', async (req, res) => {
+router.get('/students', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const students = await Student.find();
     res.json(students);
@@ -234,7 +254,7 @@ router.get('/students', async (req, res) => {
   }
 });
 
-router.post('/students', async (req, res) => {
+router.post('/students', checkRole(['admin']), async (req, res) => {
   try {
     const student = new Student(req.body);
     await student.save();
@@ -244,7 +264,7 @@ router.post('/students', async (req, res) => {
   }
 });
 
-router.put('/students/:id', async (req, res) => {
+router.put('/students/:id', checkRole(['admin']), async (req, res) => {
   try {
     const student = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!student) {
@@ -256,7 +276,7 @@ router.put('/students/:id', async (req, res) => {
   }
 });
 
-router.delete('/students/:id', async (req, res) => {
+router.delete('/students/:id', checkRole(['admin']), async (req, res) => {
   try {
     const student = await Student.findByIdAndDelete(req.params.id);
     if (!student) {
@@ -269,11 +289,14 @@ router.delete('/students/:id', async (req, res) => {
 });
 
 // Get Student Payment Status
-router.get('/students/:id/payment-status', async (req, res) => {
+router.get('/students/:id/payment-status', checkRole(['admin', 'student']), async (req, res) => {
   try {
     const student = await Student.findById(req.params.id).populate('paymentStatus.group');
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
+    }
+    if (req.user.role === 'student' && req.user.referenceId.toString() !== req.params.id) {
+      return res.status(403).json({ message: 'Access denied to other student data' });
     }
     res.json(student.paymentStatus);
   } catch (err) {
@@ -282,7 +305,7 @@ router.get('/students/:id/payment-status', async (req, res) => {
 });
 
 // Update Student Payment Status
-router.post('/students/:id/payment-status', async (req, res) => {
+router.post('/students/:id/payment-status', checkRole(['admin']), async (req, res) => {
   try {
     const student = await Student.findById(req.params.id);
     if (!student) {
@@ -297,7 +320,7 @@ router.post('/students/:id/payment-status', async (req, res) => {
 });
 
 // Schedule Routes
-router.get('/schedules', async (req, res) => {
+router.get('/schedules', checkRole(['admin', 'teacher', 'student']), async (req, res) => {
   try {
     const schedules = await Schedule.find().populate('group classroom');
     res.json(schedules);
@@ -306,7 +329,7 @@ router.get('/schedules', async (req, res) => {
   }
 });
 
-router.post('/schedules', async (req, res) => {
+router.post('/schedules', checkRole(['admin']), async (req, res) => {
   try {
     const schedule = new Schedule(req.body);
     await schedule.save();
@@ -316,7 +339,7 @@ router.post('/schedules', async (req, res) => {
   }
 });
 
-router.put('/schedules/:id', async (req, res) => {
+router.put('/schedules/:id', checkRole(['admin']), async (req, res) => {
   try {
     const schedule = await Schedule.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!schedule) {
@@ -328,7 +351,7 @@ router.put('/schedules/:id', async (req, res) => {
   }
 });
 
-router.delete('/schedules/:id', async (req, res) => {
+router.delete('/schedules/:id', checkRole(['admin']), async (req, res) => {
   try {
     const schedule = await Schedule.findByIdAndDelete(req.params.id);
     if (!schedule) {
@@ -341,7 +364,7 @@ router.delete('/schedules/:id', async (req, res) => {
 });
 
 // Attendance Routes
-router.get('/attendances', async (req, res) => {
+router.get('/attendances', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const attendances = await Attendance.find().populate('student group schedule');
     res.json(attendances);
@@ -350,7 +373,7 @@ router.get('/attendances', async (req, res) => {
   }
 });
 
-router.post('/attendances', async (req, res) => {
+router.post('/attendances', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const attendance = new Attendance(req.body);
     await attendance.save();
@@ -360,7 +383,7 @@ router.post('/attendances', async (req, res) => {
   }
 });
 
-router.put('/attendances/:id', async (req, res) => {
+router.put('/attendances/:id', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const attendance = await Attendance.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!attendance) {
@@ -372,7 +395,7 @@ router.put('/attendances/:id', async (req, res) => {
   }
 });
 
-router.delete('/attendances/:id', async (req, res) => {
+router.delete('/attendances/:id', checkRole(['admin']), async (req, res) => {
   try {
     const attendance = await Attendance.findByIdAndDelete(req.params.id);
     if (!attendance) {
@@ -385,11 +408,16 @@ router.delete('/attendances/:id', async (req, res) => {
 });
 
 // Get Attendance by Date for Highlighting Lesson Days
-router.get('/attendances/dates', async (req, res) => {
+router.get('/attendances/dates', checkRole(['admin', 'teacher', 'student']), async (req, res) => {
   try {
     const { studentId, groupId, startDate, endDate } = req.query;
     const query = {};
-    if (studentId) query.student = studentId;
+    if (studentId) {
+      if (req.user.role === 'student' && req.user.referenceId.toString() !== studentId) {
+        return res.status(403).json({ message: 'Access denied to other student data' });
+      }
+      query.student = studentId;
+    }
     if (groupId) query.group = groupId;
     if (startDate && endDate) {
       query.date = { $gte: new Date(startDate), $lte: new Date(endDate) };
@@ -402,7 +430,7 @@ router.get('/attendances/dates', async (req, res) => {
 });
 
 // Payment Routes
-router.get('/payments', async (req, res) => {
+router.get('/payments', checkRole(['admin']), async (req, res) => {
   try {
     const payments = await Payment.find().populate('student group');
     res.json(payments);
@@ -411,7 +439,7 @@ router.get('/payments', async (req, res) => {
   }
 });
 
-router.post('/payments', async (req, res) => {
+router.post('/payments', checkRole(['admin']), async (req, res) => {
   try {
     const payment = new Payment(req.body);
     await payment.save();
@@ -421,7 +449,7 @@ router.post('/payments', async (req, res) => {
   }
 });
 
-router.put('/payments/:id', async (req, res) => {
+router.put('/payments/:id', checkRole(['admin']), async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(req.params.id, req.body, { new: true });
     if (!payment) {
@@ -433,7 +461,7 @@ router.put('/payments/:id', async (req, res) => {
   }
 });
 
-router.delete('/payments/:id', async (req, res) => {
+router.delete('/payments/:id', checkRole(['admin']), async (req, res) => {
   try {
     const payment = await Payment.findByIdAndDelete(req.params.id);
     if (!payment) {
@@ -446,7 +474,7 @@ router.delete('/payments/:id', async (req, res) => {
 });
 
 // Confirm Payment for Cycle (8 Lessons)
-router.post('/payments/:id/confirm', async (req, res) => {
+router.post('/payments/:id/confirm', checkRole(['admin']), async (req, res) => {
   try {
     const payment = await Payment.findByIdAndUpdate(
       req.params.id, 
@@ -474,7 +502,7 @@ router.post('/payments/:id/confirm', async (req, res) => {
 });
 
 // Attendance Report
-router.get('/reports/attendance', async (req, res) => {
+router.get('/reports/attendance', checkRole(['admin', 'teacher']), async (req, res) => {
   try {
     const { studentId, groupId, startDate, endDate } = req.query;
     const query = {};
@@ -491,7 +519,7 @@ router.get('/reports/attendance', async (req, res) => {
 });
 
 // Payment Report
-router.get('/reports/payments', async (req, res) => {
+router.get('/reports/payments', checkRole(['admin']), async (req, res) => {
   try {
     const { studentId, groupId, startDate, endDate } = req.query;
     const query = {};

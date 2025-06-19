@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { Box, Button, TextField, Typography, Container, Alert, CircularProgress, Paper } from '@mui/material';
 import { AuthContext } from '../context/AuthContext';
+import api from '../services/api.js';
 
 const RegisterAdmin = () => {
   const [email, setEmail] = useState('');
@@ -20,13 +20,13 @@ const RegisterAdmin = () => {
     const checkAdminExists = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get('/api/auth/check-admin');
-        if (response.data.exists && !user) {
+        const response = await api.checkAdminExists();
+        if (response.exists && !user) {
           setAdminExists(true);
           setError('Администратор уже существует. Регистрация нового администратора невозможна без авторизации.');
         }
       } catch (err) {
-        console.error('Ошибка проверки существования администратора:', err.response?.data?.message || err.message);
+        console.error('Ошибка проверки существования администратора:', err.message);
         setError('Не удалось проверить наличие администратора. Попробуйте позже.');
       } finally {
         setIsLoading(false);
@@ -43,36 +43,31 @@ const RegisterAdmin = () => {
     setIsLoading(true);
 
     try {
-      let endpoint = '/api/auth/create-admin';
-      const config = {};
-
-      if (user && user.role === 'admin') {
-        endpoint = '/api/auth/register-admin';
-        config.headers = {
-          Authorization: `Bearer ${token}`,
-        };
-      }
-
-      const response = await axios.post(endpoint, {
+      const data = {
         email,
         password,
         firstName,
         lastName
-      }, config);
+      };
 
-      if (response.status === 201) {
-        setSuccess('Администратор успешно зарегистрирован. Вы будете перенаправлены на страницу входа или панель управления.');
-        setTimeout(() => {
-          if (user && user.role === 'admin') {
-            navigate('/dashboard');
-          } else {
-            navigate('/login');
-          }
-        }, 3000);
+      let response;
+      if (user && user.role === 'admin') {
+        response = await api.registerAdmin(data, token);
+      } else {
+        response = await api.createAdmin(data);
       }
+
+      setSuccess('Администратор успешно зарегистрирован. Вы будете перенаправлены на страницу входа или панель управления.');
+      setTimeout(() => {
+        if (user && user.role === 'admin') {
+          navigate('/');
+        } else {
+          navigate('/login');
+        }
+      }, 3000);
     } catch (err) {
-      console.error('Ошибка регистрации администратора:', err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || 'Произошла ошибка при регистрации администратора.');
+      console.error('Ошибка регистрации администратора:', err.message);
+      setError(err.message || 'Произошла ошибка при регистрации администратора.');
     } finally {
       setIsLoading(false);
     }

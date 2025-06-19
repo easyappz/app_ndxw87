@@ -273,6 +273,27 @@ const updateUserReference = async (id, referenceId, referenceModel) => {
   return response.data;
 };
 
+// Authentication
+const checkAdminExists = async () => {
+  const response = await axios.get(`${API_URL}api/auth/check-admin`);
+  return response.data;
+};
+
+const createAdmin = async (data) => {
+  const response = await axios.post(`${API_URL}api/auth/create-admin`, data);
+  return response.data;
+};
+
+const registerAdmin = async (data, token) => {
+  const config = {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  };
+  const response = await axios.post(`${API_URL}api/auth/register-admin`, data, config);
+  return response.data;
+};
+
 export default {
   getClassrooms,
   createClassroom,
@@ -316,5 +337,8 @@ export default {
   getUsers,
   updateUserRole,
   updateUserPermissions,
-  updateUserReference
+  updateUserReference,
+  checkAdminExists,
+  createAdmin,
+  registerAdmin
 };

@@ -1,14 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Box, Button, Grid, Card, CardContent, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
+import { Typography, Box, Button, Grid, Card, CardContent, MenuItem, Select, InputLabel, FormControl, ToggleButtonGroup, ToggleButton } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function Attendance() {
   const [groups, setGroups] = useState([]);
   const [selectedGroup, setSelectedGroup] = useState('');
   const [students, setStudents] = useState([]);
   const [attendanceData, setAttendanceData] = useState([]);
+  const [highlightedDates, setHighlightedDates] = useState([]);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [currentMonth, setCurrentMonth] = useState(new Date().toISOString().split('T')[0].slice(0, 7));
 
   useEffect(() => {
     fetchGroups();
@@ -18,13 +20,14 @@ function Attendance() {
     if (selectedGroup) {
       fetchStudents(selectedGroup);
       fetchAttendance(selectedGroup, date);
+      fetchHighlightedDates(selectedGroup, currentMonth);
     }
-  }, [selectedGroup, date]);
+  }, [selectedGroup, date, currentMonth]);
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('/api/groups');
-      setGroups(response.data);
+      const data = await api.getGroups();
+      setGroups(data);
     } catch (error) {
       console.error('Ошибка при загрузке групп:', error);
     }
@@ -32,9 +35,10 @@ function Attendance() {
 
   const fetchStudents = async (groupId) => {
     try {
-      const response = await axios.get(`/api/groups/${groupId}`);
-      setStudents(response.data.students || []);
-      const initialAttendance = response.data.students.map(student => ({
+      const groupData = await api.getGroups();
+      const group = groupData.find(g => g._id === groupId);
+      setStudents(group.students || []);
+      const initialAttendance = (group.students || []).map(student => ({
         student: student._id,
         status: 'absent'
       }));
@@ -46,16 +50,41 @@ function Attendance() {
 
   const fetchAttendance = async (groupId, selectedDate) => {
     try {
-      const response = await axios.get(`/api/reports/attendance?groupId=${groupId}&startDate=${selectedDate}&endDate=${selectedDate}`);
-      if (response.data.length > 0) {
-        const existingData = response.data.map(record => ({
+      const data = await api.getAttendanceReport({
+        groupId,
+        startDate: selectedDate,
+        endDate: selectedDate
+      });
+      if (data.length > 0) {
+        const existingData = data.map(record => ({
           student: record.student._id,
           status: record.status
         }));
         setAttendanceData(existingData);
+      } else {
+        setAttendanceData(students.map(student => ({
+          student: student._id,
+          status: 'absent'
+        })));
       }
     } catch (error) {
       console.error('Ошибка при загрузке данных о посещаемости:', error);
+    }
+  };
+
+  const fetchHighlightedDates = async (groupId, month) => {
+    try {
+      const startDate = `${month}-01`;
+      const endDate = new Date(new Date(startDate).setMonth(new Date(startDate).getMonth() + 1)).toISOString().split('T')[0].slice(0, 10);
+      const data = await api.getAttendanceDates({
+        groupId,
+        startDate,
+        endDate
+      });
+      const dates = data.map(record => new Date(record.date).toISOString().split('T')[0]);
+      setHighlightedDates(dates);
+    } catch (error) {
+      console.error('Ошибка при загрузке дат для подсветки:', error);
     }
   };
 
@@ -72,7 +101,7 @@ function Attendance() {
   const handleSave = async () => {
     try {
       for (const record of attendanceData) {
-        await axios.post('/api/attendances', {
+        await api.createAttendance({
           student: record.student,
           group: selectedGroup,
           date: new Date(date),
@@ -80,9 +109,16 @@ function Attendance() {
         });
       }
       alert('Данные о посещаемости сохранены');
+      fetchHighlightedDates(selectedGroup, currentMonth);
     } catch (error) {
       console.error('Ошибка при сохранении данных о посещаемости:', error);
     }
+  };
+
+  const handleDateChange = (e) => {
+    const newDate = e.target.value;
+    setDate(newDate);
+    setCurrentMonth(newDate.slice(0, 7));
   };
 
   return (
@@ -90,8 +126,8 @@ function Attendance() {
       <Typography variant="h4" gutterBottom>
         Посещаемость
       </Typography>
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
-        <FormControl fullWidth sx={{ maxWidth: 300 }}>
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center', flexWrap: 'wrap' }}>
+        <FormControl sx={{ minWidth: 200 }}>
           <InputLabel>Выберите группу</InputLabel>
           <Select
             value={selectedGroup}
@@ -108,17 +144,48 @@ function Attendance() {
         <input
           type="date"
           value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ padding: '10px', fontSize: '16px' }}
+          onChange={handleDateChange}
+          style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
         />
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
-          disabled={!selectedGroup}
+          disabled={!selectedGroup || students.length === 0}
         >
           Сохранить
         </Button>
+      </Box>
+      <Box sx={{ mb: 4 }}>
+        <Typography variant="subtitle1" gutterBottom>
+          Календарь занятий
+        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+          <input
+            type="month"
+            value={currentMonth}
+            onChange={(e) => setCurrentMonth(e.target.value)}
+            style={{ padding: '10px', fontSize: '16px', border: '1px solid #ccc', borderRadius: '4px' }}
+          />
+        </Box>
+        <Box sx={{ mt: 2, display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+          {highlightedDates.length > 0 ? (
+            highlightedDates.map((highlightedDate) => (
+              <Button
+                key={highlightedDate}
+                variant={highlightedDate === date ? 'contained' : 'outlined'}
+                onClick={() => setDate(highlightedDate)}
+                sx={{ minWidth: 100 }}
+              >
+                {new Date(highlightedDate).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' })}
+              </Button>
+            ))
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Нет данных о занятиях за выбранный месяц.
+            </Typography>
+          )}
+        </Box>
       </Box>
       <Grid container spacing={3}>
         {selectedGroup ? (

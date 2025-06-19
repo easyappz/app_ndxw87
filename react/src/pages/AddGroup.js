@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Box, TextField, Button, Container, Paper, MenuItem, Select, InputLabel, FormControl } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function AddGroup() {
   const navigate = useNavigate();
@@ -19,8 +19,8 @@ function AddGroup() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get('/api/teachers');
-      setTeachers(response.data);
+      const data = await api.getTeachers();
+      setTeachers(data);
     } catch (error) {
       console.error('Ошибка при загрузке преподавателей:', error);
     }
@@ -34,7 +34,7 @@ function AddGroup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/groups', formData);
+      await api.createGroup(formData);
       navigate('/groups');
     } catch (error) {
       console.error('Ошибка при добавлении группы:', error);

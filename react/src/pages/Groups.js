@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Button, Grid, Card, CardContent, CardActions, IconButton } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 function Groups() {
   const [groups, setGroups] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchGroups();
@@ -13,8 +14,8 @@ function Groups() {
 
   const fetchGroups = async () => {
     try {
-      const response = await axios.get('/api/groups');
-      setGroups(response.data);
+      const data = await api.getGroups();
+      setGroups(data);
     } catch (error) {
       console.error('Ошибка при загрузке групп:', error);
     }
@@ -22,11 +23,15 @@ function Groups() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/groups/${id}`);
+      await api.deleteGroup(id);
       setGroups(groups.filter(group => group._id !== id));
     } catch (error) {
       console.error('Ошибка при удалении группы:', error);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/groups/edit/${id}`);
   };
 
   return (
@@ -62,10 +67,18 @@ function Groups() {
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'flex-end' }}>
-                  <IconButton size="small" sx={{ mr: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    sx={{ mr: 1 }} 
+                    onClick={() => handleEdit(group._id)}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(group._id)}>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => handleDelete(group._id)}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>

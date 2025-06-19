@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Button, Grid, Card, CardContent, CardActions, IconButton } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 function Teachers() {
   const [teachers, setTeachers] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchTeachers();
@@ -13,8 +14,8 @@ function Teachers() {
 
   const fetchTeachers = async () => {
     try {
-      const response = await axios.get('/api/teachers');
-      setTeachers(response.data);
+      const data = await api.getTeachers();
+      setTeachers(data);
     } catch (error) {
       console.error('Ошибка при загрузке преподавателей:', error);
     }
@@ -22,11 +23,15 @@ function Teachers() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/teachers/${id}`);
+      await api.deleteTeacher(id);
       setTeachers(teachers.filter(teacher => teacher._id !== id));
     } catch (error) {
       console.error('Ошибка при удалении преподавателя:', error);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/teachers/edit/${id}`);
   };
 
   return (
@@ -62,10 +67,18 @@ function Teachers() {
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'flex-end' }}>
-                  <IconButton size="small" sx={{ mr: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    sx={{ mr: 1 }} 
+                    onClick={() => handleEdit(teacher._id)}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(teacher._id)}>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => handleDelete(teacher._id)}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>

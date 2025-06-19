@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Typography, Box, TextField, Button, Container, Paper, Chip, OutlinedInput, MenuItem, Select } from '@mui/material';
+import { Typography, Box, TextField, Button, Container, Paper, Chip } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function AddTeacher() {
   const navigate = useNavigate();
@@ -20,11 +20,6 @@ function AddTeacher() {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubjectsChange = (event) => {
-    const { value } = event.target;
-    setFormData({ ...formData, subjects: typeof value === 'string' ? value.split(',') : value });
-  };
-
   const handleAddSubject = () => {
     if (subjectInput && !formData.subjects.includes(subjectInput)) {
       setFormData({ ...formData, subjects: [...formData.subjects, subjectInput] });
@@ -39,7 +34,7 @@ function AddTeacher() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/teachers', formData);
+      await api.createTeacher(formData);
       navigate('/teachers');
     } catch (error) {
       console.error('Ошибка при добавлении преподавателя:', error);

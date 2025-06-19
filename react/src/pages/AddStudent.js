@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Box, TextField, Button, Container, Paper } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function AddStudent() {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ function AddStudent() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/students', formData);
+      await api.createStudent(formData);
       navigate('/students');
     } catch (error) {
       console.error('Ошибка при добавлении ученика:', error);

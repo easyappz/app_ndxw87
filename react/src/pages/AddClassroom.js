@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Typography, Box, TextField, Button, Container, Paper } from '@mui/material';
 import { Save as SaveIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function AddClassroom() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ function AddClassroom() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/classrooms', formData);
+      await api.createClassroom(formData);
       navigate('/classrooms');
     } catch (error) {
       console.error('Ошибка при добавлении кабинета:', error);

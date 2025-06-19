@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Button, Grid, Card, CardContent, CardActions, IconButton } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 function Classrooms() {
   const [classrooms, setClassrooms] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchClassrooms();
@@ -13,8 +14,8 @@ function Classrooms() {
 
   const fetchClassrooms = async () => {
     try {
-      const response = await axios.get('/api/classrooms');
-      setClassrooms(response.data);
+      const data = await api.getClassrooms();
+      setClassrooms(data);
     } catch (error) {
       console.error('Ошибка при загрузке кабинетов:', error);
     }
@@ -22,11 +23,15 @@ function Classrooms() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/classrooms/${id}`);
+      await api.deleteClassroom(id);
       setClassrooms(classrooms.filter(classroom => classroom._id !== id));
     } catch (error) {
       console.error('Ошибка при удалении кабинета:', error);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/classrooms/edit/${id}`);
   };
 
   return (
@@ -62,10 +67,18 @@ function Classrooms() {
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'flex-end' }}>
-                  <IconButton size="small" sx={{ mr: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    sx={{ mr: 1 }} 
+                    onClick={() => handleEdit(classroom._id)}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(classroom._id)}>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => handleDelete(classroom._id)}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>

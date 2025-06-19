@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Typography, Box, Button, Grid, Card, CardContent, CardActions, IconButton } from '@mui/material';
 import { Add as AddIcon, Delete as DeleteIcon, Edit as EditIcon } from '@mui/icons-material';
-import { Link } from 'react-router-dom';
-import axios from 'axios';
+import { Link, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 
 function Students() {
   const [students, setStudents] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchStudents();
@@ -13,8 +14,8 @@ function Students() {
 
   const fetchStudents = async () => {
     try {
-      const response = await axios.get('/api/students');
-      setStudents(response.data);
+      const data = await api.getStudents();
+      setStudents(data);
     } catch (error) {
       console.error('Ошибка при загрузке учеников:', error);
     }
@@ -22,11 +23,15 @@ function Students() {
 
   const handleDelete = async (id) => {
     try {
-      await axios.delete(`/api/students/${id}`);
+      await api.deleteStudent(id);
       setStudents(students.filter(student => student._id !== id));
     } catch (error) {
       console.error('Ошибка при удалении ученика:', error);
     }
+  };
+
+  const handleEdit = (id) => {
+    navigate(`/students/edit/${id}`);
   };
 
   return (
@@ -62,10 +67,18 @@ function Students() {
                   </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'flex-end' }}>
-                  <IconButton size="small" sx={{ mr: 1 }}>
+                  <IconButton 
+                    size="small" 
+                    sx={{ mr: 1 }} 
+                    onClick={() => handleEdit(student._id)}
+                  >
                     <EditIcon fontSize="small" />
                   </IconButton>
-                  <IconButton size="small" color="error" onClick={() => handleDelete(student._id)}>
+                  <IconButton 
+                    size="small" 
+                    color="error" 
+                    onClick={() => handleDelete(student._id)}
+                  >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </CardActions>

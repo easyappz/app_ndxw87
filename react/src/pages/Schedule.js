@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Typography, Box, ToggleButtonGroup, ToggleButton, Grid, Card, CardContent } from '@mui/material';
+import { Typography, Box, ToggleButtonGroup, ToggleButton, Grid, Card, CardContent, List, ListItem, ListItemText } from '@mui/material';
 import { Day as DayIcon, Week as WeekIcon, Month as MonthIcon } from '@mui/icons-material';
-import axios from 'axios';
+import api from '../services/api';
 
 function Schedule() {
   const [view, setView] = useState('day');
   const [classrooms, setClassrooms] = useState([]);
   const [schedules, setSchedules] = useState([]);
+  const [scheduleData, setScheduleData] = useState({});
 
   useEffect(() => {
     fetchClassrooms();
@@ -21,8 +22,8 @@ function Schedule() {
 
   const fetchClassrooms = async () => {
     try {
-      const response = await axios.get('/api/classrooms');
-      setClassrooms(response.data);
+      const data = await api.getClassrooms();
+      setClassrooms(data);
     } catch (error) {
       console.error('Ошибка при загрузке кабинетов:', error);
     }
@@ -30,23 +31,82 @@ function Schedule() {
 
   const fetchSchedules = async () => {
     try {
-      const response = await axios.get('/api/schedules');
-      setSchedules(response.data);
+      const data = await api.getSchedules();
+      setSchedules(data);
     } catch (error) {
       console.error('Ошибка при загрузке расписания:', error);
     }
   };
 
   const fetchScheduleData = async (selectedView) => {
-    // Placeholder for fetching schedule based on view (day/week/month)
-    // This will be updated based on backend API
-    console.log(`Fetching schedule for ${selectedView} view`);
+    try {
+      const data = {};
+      for (const classroom of classrooms) {
+        const schedule = await api.getClassroomSchedule(classroom._id, selectedView);
+        data[classroom._id] = schedule;
+      }
+      setScheduleData(data);
+    } catch (error) {
+      console.error(`Ошибка при загрузке расписания для вида ${selectedView}:`, error);
+    }
   };
 
   const handleViewChange = (event, newView) => {
     if (newView !== null) {
       setView(newView);
     }
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return new Date(date).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const renderSchedule = (classroomId) => {
+    const data = scheduleData[classroomId];
+    if (!data) return <Typography variant="body2" color="text.secondary">Нет данных</Typography>;
+
+    if (view === 'day' && data.days && data.days.length > 0) {
+      return (
+        <List dense>
+          {data.days.map((day, index) => (
+            <ListItem key={index}>
+              <ListItemText
+                primary={day.dayOfWeek}
+                secondary={day.timeSlots.map(slot => `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`).join(', ')}
+              />
+            </ListItem>
+          ))}
+        </List>
+      );
+    } else if (view === 'week' && data.weeks && data.weeks.length > 0) {
+      return (
+        <List dense>
+          {data.weeks.map((week, index) => (
+            <ListItem key={index}>
+              <ListItemText
+                primary={`Неделя ${week.weekNumber}`}
+                secondary={week.days.map(day => `${day.dayOfWeek}: ${day.timeSlots.map(slot => `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`).join(', ')}`).join('; ')}
+              />
+            </ListItem>
+          ))}
+        </List>
+      );
+    } else if (view === 'month' && data.months && data.months.length > 0) {
+      return (
+        <List dense>
+          {data.months.map((month, index) => (
+            <ListItem key={index}>
+              <ListItemText
+                primary={month.month}
+                secondary={month.days.map(day => `${new Date(day.date).toLocaleDateString('ru-RU')}: ${day.timeSlots.map(slot => `${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}`).join(', ')}`).join('; ')}
+              />
+            </ListItem>
+          ))}
+        </List>
+      );
+    }
+    return <Typography variant="body2" color="text.secondary">Расписание отсутствует</Typography>;
   };
 
   return (
@@ -84,9 +144,7 @@ function Schedule() {
                   <Typography variant="h6" gutterBottom>
                     Кабинет: {classroom.name}
                   </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Здесь будет отображаться расписание для кабинета в режиме {view === 'day' ? 'день' : view === 'week' ? 'неделя' : 'месяц'}.
-                  </Typography>
+                  {renderSchedule(classroom._id)}
                 </CardContent>
               </Card>
             </Grid>

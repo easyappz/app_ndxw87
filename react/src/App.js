@@ -18,6 +18,7 @@ import Attendance from './pages/Attendance';
 import Finances from './pages/Finances';
 import AccessControl from './pages/AccessControl';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Unauthorized from './pages/Unauthorized';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -64,6 +65,7 @@ function App() {
         <AuthProvider>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
             <Route path="/unauthorized" element={<Unauthorized />} />
             <Route path="/" element={<Layout />}>
               <Route 

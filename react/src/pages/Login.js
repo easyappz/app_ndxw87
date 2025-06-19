@@ -79,6 +79,16 @@ const Login = () => {
           >
             {loading ? <CircularProgress size={24} /> : 'Sign In'}
           </Button>
+          <Button
+            fullWidth
+            variant="outlined"
+            size="large"
+            sx={{ mt: 1, mb: 2 }}
+            onClick={() => navigate('/register')}
+            disabled={loading}
+          >
+            Don't have an account? Register
+          </Button>
         </form>
       </Paper>
     </Box>

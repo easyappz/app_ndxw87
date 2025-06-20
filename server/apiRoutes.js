@@ -1,21 +1,49 @@
 const express = require('express');
-const маршрутыАутентификации = require('./routes/auth');
-const маршрутыПанели = require('./routes/dashboard');
-const маршрутыКонтроляДоступа = require('./routes/accessControl');
-const защищенныеМаршруты = require('./routes/protectedRoutes');
+const authRoutes = require('./routes/auth');
+const dashboardRoutes = require('./routes/dashboard');
+const accessControlRoutes = require('./routes/accessControl');
+const protectedRoutes = require('./routes/protectedRoutes');
+const studentsRoutes = require('./routes/students');
+const teachersRoutes = require('./routes/teachers');
+const groupsRoutes = require('./routes/groups');
+const classroomsRoutes = require('./routes/classrooms');
+const schedulesRoutes = require('./routes/schedules');
+const attendanceRoutes = require('./routes/attendance');
+const paymentsRoutes = require('./routes/payments');
 
-const маршрутизатор = express.Router();
+const router = express.Router();
 
-// Маршруты аутентификации
-маршрутизатор.use('/auth', маршрутыАутентификации);
+// Authentication routes
+router.use('/auth', authRoutes);
 
-// Маршруты панели управления
-маршрутизатор.use('/dashboard', маршрутыПанели);
+// Dashboard routes
+router.use('/dashboard', dashboardRoutes);
 
-// Маршруты контроля доступа
-маршрутизатор.use('/access-control', маршрутыКонтроляДоступа);
+// Access control routes
+router.use('/access-control', accessControlRoutes);
 
-// Защищенные маршруты на основе ролей
-маршрутизатор.use('/protected', защищенныеМаршруты);
+// Protected routes based on roles
+router.use('/protected', protectedRoutes);
 
-module.exports = маршрутизатор;
+// Student management routes
+router.use('/students', studentsRoutes);
+
+// Teacher management routes
+router.use('/teachers', teachersRoutes);
+
+// Group management routes
+router.use('/groups', groupsRoutes);
+
+// Classroom management routes
+router.use('/classrooms', classroomsRoutes);
+
+// Schedule management routes
+router.use('/schedules', schedulesRoutes);
+
+// Attendance management routes
+router.use('/attendance', attendanceRoutes);
+
+// Payment management routes
+router.use('/payments', paymentsRoutes);
+
+module.exports = router;

@@ -3,22 +3,21 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bodyParser = require('body-parser');
 const bcrypt = require('bcryptjs');
-const Пользователь = require('./models/User');
+const User = require('./models/User');
+const apiRoutes = require('./apiRoutes');
 
-const apiМаршруты = require('./apiRoutes');
-
-// Инициализация приложения Express
-const приложение = express();
+// Initialize Express app
+const app = express();
 
 // Middleware
-приложение.use(cors());
-приложение.use(bodyParser.json());
-приложение.use(bodyParser.urlencoded({ extended: true }));
+app.use(cors());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
-// API маршруты
-приложение.use('/api', apiМаршруты);
+// API routes
+app.use('/api', apiRoutes);
 
-// Подключение к MongoDB
+// MongoDB connection
 const MONGO_URI = process.env.MONGO_URI;
 
 mongoose.connect(MONGO_URI, {
@@ -26,48 +25,48 @@ mongoose.connect(MONGO_URI, {
   useUnifiedTopology: true
 })
 .then(async () => {
-  console.log('MongoDB успешно подключен');
-  await создатьАдмина();
+  console.log('MongoDB connected successfully');
+  await createAdmin();
 })
-.catch((ошибка) => {
-  console.error('Ошибка подключения к MongoDB:', ошибка);
+.catch((error) => {
+  console.error('MongoDB connection error:', error);
 });
 
-// Функция для создания пользователя-администратора
-const создатьАдмина = async () => {
+// Function to create admin user
+const createAdmin = async () => {
   try {
-    const админПочта = 'ilez2017@mail.ru';
-    const админПароль = '123123123';
-    const существующийАдмин = await Пользователь.findOne({ email: админПочта });
-    if (!существующийАдмин) {
-      const зашифрованныйПароль = await bcrypt.hash(админПароль, 10);
-      const админПользователь = new Пользователь({
-        email: админПочта,
-        password: зашифрованныйПароль,
-        firstName: 'Админ',
-        lastName: 'Пользователь',
+    const adminEmail = 'ilez2017@mail.ru';
+    const adminPassword = '123123123';
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+      const adminUser = new User({
+        email: adminEmail,
+        password: hashedPassword,
+        firstName: 'Admin',
+        lastName: 'User',
         role: 'admin'
       });
-      await админПользователь.save();
-      console.log('Пользователь-администратор успешно создан');
+      await adminUser.save();
+      console.log('Admin user created successfully');
     } else {
-      console.log('Пользователь-администратор уже существует');
+      console.log('Admin user already exists');
     }
-  } catch (ошибка) {
-    console.error('Ошибка при создании администратора:', ошибка.message);
+  } catch (error) {
+    console.error('Error creating admin:', error.message);
   }
 };
 
-// Middleware для обработки ошибок
-приложение.use((ошибка, запрос, ответ, следующий) => {
-  console.error(ошибка.stack);
-  ответ.status(500).json({ сообщение: 'Что-то пошло не так!' });
+// Error handling middleware
+app.use((error, req, res, next) => {
+  console.error(error.stack);
+  res.status(500).json({ message: 'Something went wrong!' });
 });
 
-// Запуск сервера
-const ПОРТ = process.env.PORT || 5000;
-приложение.listen(ПОРТ, () => {
-  console.log(`Сервер запущен на порту ${ПОРТ}`);
+// Start server
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
-module.exports = приложение;
+module.exports = app;

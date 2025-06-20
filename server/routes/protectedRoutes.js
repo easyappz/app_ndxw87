@@ -1,21 +1,21 @@
 const express = require('express');
-const { аутентифицироватьПользователя, проверитьРоль } = require('../middleware/auth');
+const { authenticateUser, checkRole } = require('../middleware/auth');
 
-const маршрутизатор = express.Router();
+const router = express.Router();
 
 // Пример маршрута, доступного только администратору
-маршрутизатор.get('/admin-only', аутентифицироватьПользователя, проверитьРоль(['admin']), (запрос, ответ) => {
-  ответ.json({ сообщение: 'Это конечная точка только для администратора', пользователь: запрос.user });
+router.get('/admin-only', authenticateUser, checkRole(['admin']), (req, res) => {
+  res.json({ message: 'Это конечная точка только для администратора', user: req.user });
 });
 
 // Пример маршрута, доступного администратору и учителю
-маршрутизатор.get('/teacher-admin', аутентифицироватьПользователя, проверитьРоль(['admin', 'teacher']), (запрос, ответ) => {
-  ответ.json({ сообщение: 'Это доступно учителям и администраторам', пользователь: запрос.user });
+router.get('/teacher-admin', authenticateUser, checkRole(['admin', 'teacher']), (req, res) => {
+  res.json({ message: 'Это доступно учителям и администраторам', user: req.user });
 });
 
 // Пример маршрута, доступного для всех ролей
-маршрутизатор.get('/all-roles', аутентифицироватьПользователя, проверитьРоль(['admin', 'teacher', 'student']), (запрос, ответ) => {
-  ответ.json({ сообщение: 'Это доступно всем аутентифицированным пользователям', пользователь: запрос.user });
+router.get('/all-roles', authenticateUser, checkRole(['admin', 'teacher', 'student']), (req, res) => {
+  res.json({ message: 'Это доступно всем аутентифицированным пользователям', user: req.user });
 });
 
-module.exports = маршрутизатор;
+module.exports = router;
